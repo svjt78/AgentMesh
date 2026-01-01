@@ -1,0 +1,120 @@
+# Environment and Secrets
+.env
+.env.*
+*.env
+.env.local
+.env.development
+.env.test
+.env.production
+secrets/
+*.key
+*.pem
+*.crt
+
+# Documentation (excluded per project requirements)
+CLAUDE.md
+AGENTS.md
+.claude/
+Prompt_Agentic_Insurance_Framework.md
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+*.pyc
+
+# Virtual Environments
+venv/
+ENV/
+env/
+.venv
+env.bak/
+venv.bak/
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+lerna-debug.log*
+.npm
+.eslintcache
+
+# Next.js
+.next/
+out/
+next-env.d.ts
+.vercel
+
+# Build outputs
+dist/
+build/
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+
+# OS Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Storage (runtime data - keep structure, ignore content)
+storage/sessions/*.jsonl
+storage/artifacts/*.json
+storage/checkpoints/*.json
+storage/compactions/*
+
+# Keep directory structure
+!storage/sessions/.gitkeep
+!storage/artifacts/.gitkeep
+!storage/checkpoints/.gitkeep
+!storage/compactions/.gitkeep
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Testing
+.coverage
+.pytest_cache/
+.tox/
+htmlcov/
+coverage/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/

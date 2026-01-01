@@ -1,0 +1,175 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2025-12-22T10:00:00Z",
+  "tools": [
+    {
+      "tool_id": "policy_snapshot",
+      "name": "Policy Snapshot Retriever",
+      "description": "Retrieves comprehensive policy coverage details, limits, deductibles, and effective dates for a given policy ID. Use this tool to validate coverage and determine applicable limits.",
+      "endpoint": "/invoke/policy_snapshot",
+      "input_schema": {
+        "type": "object",
+        "required": ["policy_id"],
+        "properties": {
+          "policy_id": {
+            "type": "string",
+            "description": "The unique policy identifier"
+          },
+          "as_of_date": {
+            "type": "string",
+            "format": "date",
+            "description": "Optional: retrieve policy snapshot as of specific date"
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "policy_id": {"type": "string"},
+          "status": {"type": "string"},
+          "effective_date": {"type": "string"},
+          "expiration_date": {"type": "string"},
+          "coverages": {"type": "array"},
+          "deductibles": {"type": "object"}
+        }
+      },
+      "lineage_tags": ["policy_data", "coverage_validation", "authoritative"]
+    },
+    {
+      "tool_id": "fraud_rules",
+      "name": "Fraud Rules Engine",
+      "description": "Evaluates claim data against a comprehensive set of rule-based fraud indicators. Returns triggered rules, severity levels, and an aggregate fraud score. Use this tool to detect potential fraud patterns.",
+      "endpoint": "/invoke/fraud_rules",
+      "input_schema": {
+        "type": "object",
+        "required": ["claim_data"],
+        "properties": {
+          "claim_data": {
+            "type": "object",
+            "description": "Full normalized claim object"
+          },
+          "rule_version": {
+            "type": "string",
+            "default": "2.3",
+            "description": "Fraud rule set version to use"
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "triggered_rules": {"type": "array"},
+          "total_rules_evaluated": {"type": "integer"},
+          "aggregate_fraud_score": {"type": "number"}
+        }
+      },
+      "lineage_tags": ["fraud_detection", "rule_based", "deterministic"]
+    },
+    {
+      "tool_id": "similarity",
+      "name": "Similar Claims Finder",
+      "description": "Finds similar historical claims based on claim attributes (loss type, amount, location, etc.). Returns similarity scores and patterns. Use this tool to identify precedents and anomalies.",
+      "endpoint": "/invoke/similarity",
+      "input_schema": {
+        "type": "object",
+        "required": ["claim_attributes"],
+        "properties": {
+          "claim_attributes": {
+            "type": "object",
+            "description": "Claim attributes to match against"
+          },
+          "similarity_threshold": {
+            "type": "number",
+            "default": 0.75,
+            "minimum": 0,
+            "maximum": 1
+          },
+          "max_results": {
+            "type": "integer",
+            "default": 10
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "similar_claims": {"type": "array"},
+          "patterns_detected": {"type": "array"},
+          "average_amount": {"type": "number"}
+        }
+      },
+      "lineage_tags": ["pattern_analysis", "historical_data", "heuristic"]
+    },
+    {
+      "tool_id": "schema_validator",
+      "name": "Claim Schema Validator",
+      "description": "Validates claim data against the standard claim schema. Returns validation status and identifies missing or invalid fields.",
+      "endpoint": "/invoke/schema_validator",
+      "input_schema": {
+        "type": "object",
+        "required": ["claim_data"],
+        "properties": {
+          "claim_data": {"type": "object"},
+          "strict_mode": {"type": "boolean", "default": false}
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "valid": {"type": "boolean"},
+          "missing_fields": {"type": "array"},
+          "invalid_fields": {"type": "array"}
+        }
+      },
+      "lineage_tags": ["validation", "data_quality"]
+    },
+    {
+      "tool_id": "coverage_rules",
+      "name": "Coverage Rules Engine",
+      "description": "Applies coverage determination rules based on policy type, loss type, and exclusions.",
+      "endpoint": "/invoke/coverage_rules",
+      "input_schema": {
+        "type": "object",
+        "required": ["policy_data", "claim_data"],
+        "properties": {
+          "policy_data": {"type": "object"},
+          "claim_data": {"type": "object"}
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "coverage_determination": {"type": "string"},
+          "applicable_exclusions": {"type": "array"},
+          "rationale": {"type": "string"}
+        }
+      },
+      "lineage_tags": ["coverage_analysis", "rule_based"]
+    },
+    {
+      "tool_id": "decision_rules",
+      "name": "Recommendation Decision Rules",
+      "description": "Applies business rules to determine recommended action based on coverage status, fraud score, and severity.",
+      "endpoint": "/invoke/decision_rules",
+      "input_schema": {
+        "type": "object",
+        "required": ["coverage_status", "fraud_score", "severity_band"],
+        "properties": {
+          "coverage_status": {"type": "string"},
+          "fraud_score": {"type": "number"},
+          "severity_band": {"type": "string"},
+          "reported_amount": {"type": "number"}
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "recommended_action": {"type": "string"},
+          "matched_rules": {"type": "array"},
+          "confidence": {"type": "string"}
+        }
+      },
+      "lineage_tags": ["decision_support", "rule_based"]
+    }
+  ]
+}

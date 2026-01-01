@@ -1,0 +1,90 @@
+version: '3.8'
+
+services:
+  orchestrator:
+    build:
+      context: ./backend/orchestrator
+      dockerfile: Dockerfile
+    container_name: orchestrator
+    ports:
+      - "${ORCHESTRATOR_PORT:-8016}:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - TOOLS_BASE_URL=http://tools_gateway:8010
+      - STORAGE_PATH=/storage
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./backend/orchestrator/app:/app/app:rw
+      - ./registries:/registries:rw
+      - ./storage:/storage:rw
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    depends_on:
+      - tools_gateway
+    networks:
+      - agentmesh
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  tools_gateway:
+    build:
+      context: ./tools/tools_gateway
+      dockerfile: Dockerfile
+    container_name: tools_gateway
+    ports:
+      - "8010:8010"
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./tools/tools_gateway/app:/app/app:rw
+      - ./registries:/registries:ro
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8010 --reload
+    networks:
+      - agentmesh
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8010/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: dev
+    container_name: frontend
+    ports:
+      - "${FRONTEND_PORT:-3016}:3000"
+    environment:
+      - NEXT_PUBLIC_ORCHESTRATOR_URL=http://localhost:${ORCHESTRATOR_PORT:-8016}
+      - NODE_ENV=development
+    volumes:
+      # Volume mounts for hot reload
+      - ./frontend/app:/app/app:rw
+      - ./frontend/components:/app/components:rw
+      - ./frontend/lib:/app/lib:rw
+      - ./frontend/hooks:/app/hooks:rw
+      - ./frontend/public:/app/public:rw
+    command: npm run dev
+    depends_on:
+      - orchestrator
+    networks:
+      - agentmesh
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  agentmesh:
+    driver: bridge
+
+volumes:
+  storage:

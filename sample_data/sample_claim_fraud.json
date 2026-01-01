@@ -1,0 +1,194 @@
+{
+  "_description": "Fraud Case - Auto theft claim with multiple red flags for fraud detection",
+  "claim_id": "CLM-2024-FRAUD-001",
+  "policy_id": "POL-002",
+  "claim_date": "2024-03-16T23:45:00Z",
+  "incident_date": "2024-03-16T22:00:00Z",
+  "loss_type": "theft",
+  "claim_amount": 45000.00,
+
+  "claimant": {
+    "name": "Michael Stevens",
+    "email": "m.stevens.temp@mailinator.com",
+    "phone": "(555) 999-8888",
+    "address": {
+      "street": "789 Temporary Ave Apt 2B",
+      "city": "Las Vegas",
+      "state": "NV",
+      "zip": "89101"
+    },
+    "date_of_birth": "1990-12-25",
+    "license_number": "N9876543",
+    "license_state": "NV"
+  },
+
+  "policy_details": {
+    "policy_number": "POL-002",
+    "policy_type": "auto",
+    "effective_date": "2024-02-28",
+    "expiration_date": "2025-02-28",
+    "coverage_type": "comprehensive",
+    "deductible": 1000.00,
+    "coverage_limit": 50000.00,
+    "premium_status": "current",
+    "policy_age_days": 16,
+    "recent_coverage_change": true,
+    "coverage_increased_date": "2024-02-20",
+    "coverage_increased_from": 25000.00
+  },
+
+  "incident_details": {
+    "location": "Parking lot of closed shopping mall, 2200 Desert Blvd, Las Vegas, NV",
+    "description": "Vehicle stolen from parking lot. Left car unlocked for 'just a minute' to grab food from nearby restaurant. Returned 30 minutes later and car was gone. No witnesses. No security cameras in area.",
+    "weather_conditions": "clear",
+    "road_conditions": "dry",
+    "time_of_day": "22:00",
+    "lighting": "dark",
+    "police_report_number": "LVPD-2024-031602",
+    "police_department": "Las Vegas Metropolitan Police Department",
+    "at_fault_party": "unknown_third_party",
+    "traffic_citations": [],
+    "report_delay_hours": 2,
+    "reported_to_police_at": "2024-03-17T00:00:00Z"
+  },
+
+  "vehicle_details": {
+    "make": "BMW",
+    "model": "X5",
+    "year": 2023,
+    "vin": "5UX53DP02P9V12345",
+    "mileage": 8500,
+    "color": "black",
+    "license_plate": "9NVD456",
+    "license_state": "NV",
+    "purchase_date": "2024-02-15",
+    "purchase_price": 65000.00,
+    "current_value": 62000.00,
+    "outstanding_loan": 48000.00,
+    "lender": "QuickCash Auto Loans"
+  },
+
+  "damage_assessment": {
+    "damage_areas": [],
+    "severity": "total_loss",
+    "driveable": false,
+    "towed": false,
+    "vehicle_recovered": false,
+    "preliminary_estimate": 45000.00
+  },
+
+  "injuries": {
+    "reported": false,
+    "claimant_injured": false,
+    "passengers_injured": false,
+    "other_party_injured": false,
+    "medical_treatment_sought": false
+  },
+
+  "witnesses": [],
+
+  "other_party": {
+    "driver_name": "unknown",
+    "insurance_company": "unknown",
+    "policy_number": "unknown",
+    "contact_phone": "unknown",
+    "vehicle_make": "unknown",
+    "vehicle_model": "unknown",
+    "vehicle_year": 0,
+    "license_plate": "unknown",
+    "admitted_fault": false
+  },
+
+  "documentation": {
+    "photos_submitted": false,
+    "photo_count": 0,
+    "police_report_submitted": false,
+    "repair_estimates_submitted": 0,
+    "witness_statements_submitted": 0,
+    "medical_records_submitted": false,
+    "vehicle_title_submitted": false,
+    "purchase_documents_submitted": false
+  },
+
+  "claim_history": {
+    "previous_claims_count": 3,
+    "previous_claims": [
+      {
+        "claim_id": "CLM-2023-789",
+        "date": "2023-11-15",
+        "type": "theft",
+        "amount": 28000.00,
+        "reason": "Vehicle theft",
+        "status": "closed_paid",
+        "insurer": "ABC Insurance"
+      },
+      {
+        "claim_id": "CLM-2022-456",
+        "date": "2022-08-20",
+        "type": "collision",
+        "amount": 15000.00,
+        "reason": "Total loss collision",
+        "status": "closed_paid",
+        "insurer": "DEF Insurance"
+      },
+      {
+        "claim_id": "CLM-2021-123",
+        "date": "2021-06-10",
+        "type": "theft",
+        "amount": 22000.00,
+        "reason": "Vehicle theft",
+        "status": "closed_paid",
+        "insurer": "GHI Insurance"
+      }
+    ],
+    "claims_in_last_3_years": 3,
+    "claims_in_last_5_years": 3,
+    "pattern_detected": "multiple_theft_claims"
+  },
+
+  "fraud_indicators": {
+    "duplicate_claim": false,
+    "suspicious_timing": true,
+    "excessive_amount": true,
+    "provider_anomaly": false,
+    "conflicting_statements": false,
+    "rushed_filing": true,
+    "new_policy": true,
+    "recent_coverage_increase": true,
+    "multiple_similar_claims": true,
+    "financial_stress_indicators": true,
+    "missing_documentation": true,
+    "vague_incident_details": true,
+    "no_witnesses": true,
+    "vehicle_not_recovered": true,
+    "high_claim_to_value_ratio": true,
+    "keys_left_in_vehicle": true,
+    "suspicious_location": true,
+    "delayed_reporting": true
+  },
+
+  "additional_red_flags": {
+    "recent_vehicle_purchase": true,
+    "purchase_to_claim_days": 29,
+    "outstanding_loan_exceeds_value": false,
+    "temporary_email_domain": true,
+    "claim_filed_late_night": true,
+    "no_prior_insurer_contact": true,
+    "multiple_policy_changes": true,
+    "claim_amount_near_limit": true,
+    "similar_incidents_in_area": false,
+    "claimant_employment_status": "unemployed",
+    "recent_address_change": true
+  },
+
+  "metadata": {
+    "filing_method": "phone",
+    "filed_by": "policyholder",
+    "contact_preference": "phone",
+    "preferred_repair_shop": "none",
+    "rental_car_needed": true,
+    "rental_duration_days": 30,
+    "urgency": "high",
+    "payment_method_requested": "check"
+  }
+}

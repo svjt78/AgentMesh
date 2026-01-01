@@ -1,0 +1,157 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2025-12-22T10:00:00Z",
+  "_comment": "Model profiles for both OpenAI and Anthropic (Claude) providers. Each agent references a profile via model_profile_id.",
+  "profiles": [
+    {
+      "profile_id": "default_gpt35",
+      "name": "Default GPT-3.5 Turbo",
+      "description": "Cost-optimized model for general agent reasoning and tool selection",
+      "provider": "openai",
+      "model_name": "gpt-3.5-turbo",
+      "intended_usage": "general_reasoning",
+      "parameters": {
+        "temperature": 0.3,
+        "max_tokens": 2000,
+        "top_p": 1.0,
+        "frequency_penalty": 0.0,
+        "presence_penalty": 0.0
+      },
+      "json_mode": true,
+      "constraints": {
+        "max_context_tokens": 16385,
+        "max_output_tokens": 4096
+      },
+      "retry_policy": {
+        "max_retries": 3,
+        "backoff_multiplier": 2,
+        "initial_delay_ms": 1000
+      },
+      "timeout_seconds": 30
+    },
+    {
+      "profile_id": "gpt4",
+      "name": "GPT-4",
+      "description": "High-performance model for complex reasoning tasks",
+      "provider": "openai",
+      "model_name": "gpt-4",
+      "intended_usage": "complex_reasoning",
+      "parameters": {
+        "temperature": 0.3,
+        "max_tokens": 2000,
+        "top_p": 1.0,
+        "frequency_penalty": 0.0,
+        "presence_penalty": 0.0
+      },
+      "json_mode": true,
+      "constraints": {
+        "max_context_tokens": 8192,
+        "max_output_tokens": 4096
+      },
+      "retry_policy": {
+        "max_retries": 3,
+        "backoff_multiplier": 2,
+        "initial_delay_ms": 1000
+      },
+      "timeout_seconds": 60
+    },
+    {
+      "profile_id": "gpt4_turbo",
+      "name": "GPT-4 Turbo",
+      "description": "Latest GPT-4 with extended context window and improved performance",
+      "provider": "openai",
+      "model_name": "gpt-4-turbo-preview",
+      "intended_usage": "complex_reasoning_large_context",
+      "parameters": {
+        "temperature": 0.3,
+        "max_tokens": 4000,
+        "top_p": 1.0,
+        "frequency_penalty": 0.0,
+        "presence_penalty": 0.0
+      },
+      "json_mode": true,
+      "constraints": {
+        "max_context_tokens": 128000,
+        "max_output_tokens": 4096
+      },
+      "retry_policy": {
+        "max_retries": 3,
+        "backoff_multiplier": 2,
+        "initial_delay_ms": 1000
+      },
+      "timeout_seconds": 60
+    },
+    {
+      "profile_id": "claude_sonnet_35",
+      "name": "Claude 3.5 Sonnet",
+      "description": "Anthropic's most intelligent model - best for complex analysis and reasoning",
+      "provider": "anthropic",
+      "model_name": "claude-3-5-sonnet-20241022",
+      "intended_usage": "complex_reasoning_highest_quality",
+      "parameters": {
+        "temperature": 0.3,
+        "max_tokens": 4000,
+        "top_p": 1.0
+      },
+      "json_mode": false,
+      "constraints": {
+        "max_context_tokens": 200000,
+        "max_output_tokens": 8192
+      },
+      "retry_policy": {
+        "max_retries": 3,
+        "backoff_multiplier": 2,
+        "initial_delay_ms": 1000
+      },
+      "timeout_seconds": 60
+    },
+    {
+      "profile_id": "claude_opus_3",
+      "name": "Claude 3 Opus",
+      "description": "Previous flagship model - excellent for complex tasks requiring deep reasoning",
+      "provider": "anthropic",
+      "model_name": "claude-3-opus-20240229",
+      "intended_usage": "complex_reasoning",
+      "parameters": {
+        "temperature": 0.3,
+        "max_tokens": 4000,
+        "top_p": 1.0
+      },
+      "json_mode": false,
+      "constraints": {
+        "max_context_tokens": 200000,
+        "max_output_tokens": 4096
+      },
+      "retry_policy": {
+        "max_retries": 3,
+        "backoff_multiplier": 2,
+        "initial_delay_ms": 1000
+      },
+      "timeout_seconds": 60
+    },
+    {
+      "profile_id": "claude_haiku_3",
+      "name": "Claude 3 Haiku",
+      "description": "Fastest and most cost-effective Claude model - good for simpler tasks",
+      "provider": "anthropic",
+      "model_name": "claude-3-haiku-20240307",
+      "intended_usage": "general_reasoning_fast",
+      "parameters": {
+        "temperature": 0.3,
+        "max_tokens": 2000,
+        "top_p": 1.0
+      },
+      "json_mode": false,
+      "constraints": {
+        "max_context_tokens": 200000,
+        "max_output_tokens": 4096
+      },
+      "retry_policy": {
+        "max_retries": 3,
+        "backoff_multiplier": 2,
+        "initial_delay_ms": 1000
+      },
+      "timeout_seconds": 30
+    }
+  ]
+}

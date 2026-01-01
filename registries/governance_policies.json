@@ -1,0 +1,149 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2025-12-22T10:00:00Z",
+  "_comment": "Governance limits can be overridden by environment variables: MAX_TOOL_INVOCATIONS_PER_SESSION, MAX_LLM_CALLS_PER_SESSION, etc. See config.py for all configurable parameters.",
+  "policies": {
+    "agent_invocation_access": {
+      "description": "Defines which agents the orchestrator is permitted to invoke",
+      "enforcement_level": "strict",
+      "rules": [
+        {
+          "agent_id": "orchestrator_agent",
+          "allowed_agents": [
+            "intake_agent",
+            "coverage_agent",
+            "fraud_agent",
+            "severity_agent",
+            "recommendation_agent",
+            "explainability_agent"
+          ],
+          "denied_agents": ["orchestrator_agent"]
+        }
+      ]
+    },
+    "agent_tool_access": {
+      "description": "Defines which tools each agent is permitted to request",
+      "enforcement_level": "strict",
+      "rules": [
+        {
+          "agent_id": "intake_agent",
+          "allowed_tools": ["schema_validator"],
+          "denied_tools": ["fraud_rules", "similarity", "policy_snapshot", "coverage_rules", "decision_rules"]
+        },
+        {
+          "agent_id": "coverage_agent",
+          "allowed_tools": ["policy_snapshot", "coverage_rules"],
+          "denied_tools": ["fraud_rules", "similarity", "decision_rules"]
+        },
+        {
+          "agent_id": "fraud_agent",
+          "allowed_tools": ["fraud_rules", "similarity"],
+          "denied_tools": ["policy_snapshot", "decision_rules", "coverage_rules"]
+        },
+        {
+          "agent_id": "severity_agent",
+          "allowed_tools": [],
+          "denied_tools": ["fraud_rules", "policy_snapshot", "similarity", "decision_rules", "coverage_rules"]
+        },
+        {
+          "agent_id": "recommendation_agent",
+          "allowed_tools": ["decision_rules"],
+          "denied_tools": ["fraud_rules", "policy_snapshot", "similarity", "coverage_rules"]
+        },
+        {
+          "agent_id": "explainability_agent",
+          "allowed_tools": [],
+          "denied_tools": ["*"]
+        }
+      ]
+    },
+    "model_usage": {
+      "description": "Controls which model profiles agents may use",
+      "enforcement_level": "strict",
+      "rules": [
+        {
+          "workflow_id": "claims_triage",
+          "allowed_profiles": ["default_gpt35"],
+          "default_profile": "default_gpt35"
+        }
+      ]
+    },
+    "iteration_limits": {
+      "description": "Maximum ReAct iterations per agent to prevent runaway loops. Can be overridden by AGENT_DEFAULT_MAX_ITERATIONS, ORCHESTRATOR_MAX_ITERATIONS env vars.",
+      "enforcement_level": "strict",
+      "global_max_iterations": 5,
+      "agent_overrides": [
+        {
+          "agent_id": "orchestrator_agent",
+          "max_iterations": 10,
+          "_comment": "Orchestrator needs more iterations as it coordinates multiple agents"
+        },
+        {
+          "agent_id": "fraud_agent",
+          "max_iterations": 5
+        },
+        {
+          "agent_id": "intake_agent",
+          "max_iterations": 3
+        },
+        {
+          "agent_id": "explainability_agent",
+          "max_iterations": 2
+        }
+      ]
+    },
+    "execution_constraints": {
+      "description": "Global execution limits",
+      "enforcement_level": "strict",
+      "max_workflow_duration_seconds": 300,
+      "max_tool_invocations_per_session": 50,
+      "max_llm_calls_per_session": 30
+    },
+    "hitl_access_control": {
+      "description": "Role-based access control for Human-in-the-Loop (HITL) checkpoints",
+      "enforcement_level": "strict",
+      "roles": [
+        {
+          "role_id": "reviewer",
+          "role_name": "Claims Reviewer",
+          "allowed_checkpoint_types": ["approval", "input"],
+          "allowed_workflows": ["claims_triage"],
+          "permissions": ["view", "approve", "reject", "add_comments"]
+        },
+        {
+          "role_id": "fraud_investigator",
+          "role_name": "Fraud Investigator",
+          "allowed_checkpoint_types": ["decision", "escalation"],
+          "allowed_workflows": ["claims_triage"],
+          "permissions": ["view", "decide", "escalate", "request_more_info"]
+        },
+        {
+          "role_id": "claims_adjuster",
+          "role_name": "Claims Adjuster",
+          "allowed_checkpoint_types": ["input", "approval"],
+          "allowed_workflows": ["claims_triage"],
+          "permissions": ["view", "approve", "reject", "edit_data", "add_comments"]
+        },
+        {
+          "role_id": "approver",
+          "role_name": "Senior Approver",
+          "allowed_checkpoint_types": ["approval", "decision"],
+          "allowed_workflows": ["*"],
+          "permissions": ["view", "approve", "reject", "request_revision", "escalate"]
+        },
+        {
+          "role_id": "admin",
+          "role_name": "System Administrator",
+          "allowed_checkpoint_types": ["*"],
+          "allowed_workflows": ["*"],
+          "permissions": ["*"]
+        }
+      ],
+      "checkpoint_timeout_limits": {
+        "min_timeout_seconds": 300,
+        "max_timeout_seconds": 86400,
+        "default_timeout_seconds": 3600
+      }
+    }
+  }
+}

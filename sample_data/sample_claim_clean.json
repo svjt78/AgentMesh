@@ -1,0 +1,150 @@
+{
+  "_description": "Clean Claim - Straightforward legitimate auto collision claim with complete documentation",
+  "claim_id": "CLM-2024-CLEAN-001",
+  "policy_id": "POL-001",
+  "claim_date": "2024-03-15T08:30:00Z",
+  "incident_date": "2024-03-14T17:30:00Z",
+  "loss_type": "collision",
+  "claim_amount": 12500.00,
+
+  "claimant": {
+    "name": "John Doe",
+    "email": "john.doe@example.com",
+    "phone": "(555) 123-4567",
+    "address": {
+      "street": "1234 Oak Street",
+      "city": "Los Angeles",
+      "state": "CA",
+      "zip": "90001"
+    },
+    "date_of_birth": "1985-06-15",
+    "license_number": "D1234567",
+    "license_state": "CA"
+  },
+
+  "policy_details": {
+    "policy_number": "POL-001",
+    "policy_type": "auto",
+    "effective_date": "2023-01-01",
+    "expiration_date": "2025-01-01",
+    "coverage_type": "comprehensive_collision",
+    "deductible": 500.00,
+    "coverage_limit": 50000.00,
+    "premium_status": "current"
+  },
+
+  "incident_details": {
+    "location": "Intersection of Main St and 5th Ave, Los Angeles, CA",
+    "description": "Rear-ended at traffic light on Main Street while stopped. Other driver admitted fault at scene. Front bumper, hood, and radiator damaged. Airbags deployed. No injuries sustained.",
+    "weather_conditions": "clear",
+    "road_conditions": "dry",
+    "time_of_day": "17:30",
+    "lighting": "daylight",
+    "police_report_number": "LAPD-2024-031401",
+    "police_department": "Los Angeles Police Department",
+    "at_fault_party": "other_driver",
+    "traffic_citations": ["Other driver cited for following too closely"]
+  },
+
+  "vehicle_details": {
+    "make": "Toyota",
+    "model": "Camry",
+    "year": 2022,
+    "vin": "4T1B11HK0NU123456",
+    "mileage": 15234,
+    "color": "silver",
+    "license_plate": "7ABC123",
+    "license_state": "CA",
+    "purchase_date": "2022-03-01",
+    "purchase_price": 28000.00,
+    "current_value": 24000.00
+  },
+
+  "damage_assessment": {
+    "damage_areas": [
+      "front_bumper",
+      "hood",
+      "radiator",
+      "front_grille",
+      "airbags"
+    ],
+    "severity": "moderate",
+    "driveable": false,
+    "towed": true,
+    "tow_company": "ABC Towing",
+    "tow_destination": "Smith's Auto Body, 456 Repair Ln, Los Angeles, CA",
+    "preliminary_estimate": 12500.00
+  },
+
+  "injuries": {
+    "reported": false,
+    "claimant_injured": false,
+    "passengers_injured": false,
+    "other_party_injured": false,
+    "medical_treatment_sought": false
+  },
+
+  "witnesses": [
+    {
+      "name": "Jane Smith",
+      "phone": "(555) 987-6543",
+      "email": "jane.smith@example.com",
+      "statement": "I saw the whole thing. The other car hit Mr. Doe's car from behind while he was stopped at the red light."
+    }
+  ],
+
+  "other_party": {
+    "driver_name": "Robert Johnson",
+    "insurance_company": "XYZ Insurance",
+    "policy_number": "XYZ-987654",
+    "contact_phone": "(555) 555-0123",
+    "vehicle_make": "Honda",
+    "vehicle_model": "Accord",
+    "vehicle_year": 2019,
+    "license_plate": "8XYZ789",
+    "admitted_fault": true
+  },
+
+  "documentation": {
+    "photos_submitted": true,
+    "photo_count": 15,
+    "police_report_submitted": true,
+    "repair_estimates_submitted": 2,
+    "witness_statements_submitted": 1,
+    "medical_records_submitted": false
+  },
+
+  "claim_history": {
+    "previous_claims_count": 1,
+    "previous_claims": [
+      {
+        "claim_id": "CLM-2021-001",
+        "date": "2021-08-10",
+        "type": "comprehensive",
+        "amount": 2500.00,
+        "reason": "Hail damage",
+        "status": "closed_paid"
+      }
+    ],
+    "claims_in_last_3_years": 1,
+    "claims_in_last_5_years": 1
+  },
+
+  "fraud_indicators": {
+    "duplicate_claim": false,
+    "suspicious_timing": false,
+    "excessive_amount": false,
+    "provider_anomaly": false,
+    "conflicting_statements": false,
+    "rushed_filing": false
+  },
+
+  "metadata": {
+    "filing_method": "online_portal",
+    "filed_by": "policyholder",
+    "contact_preference": "email",
+    "preferred_repair_shop": "Smith's Auto Body",
+    "rental_car_needed": true,
+    "rental_duration_days": 7
+  }
+}

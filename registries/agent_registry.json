@@ -1,0 +1,416 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2025-12-22T10:00:00Z",
+  "_comment": "Agent limits (max_iterations, iteration_timeout_seconds) can be overridden by environment variables. See config.py for details.",
+  "agents": [
+    {
+      "agent_id": "orchestrator_agent",
+      "name": "Orchestrator Agent",
+      "description": "Meta-agent that coordinates claim processing by dynamically selecting and invoking appropriate agents based on workflow state, agent capabilities, and analysis requirements. Discovers agents from registry and decides execution order.",
+      "capabilities": [
+        "workflow_coordination",
+        "agent_selection",
+        "context_management",
+        "decision_routing",
+        "dynamic_orchestration"
+      ],
+      "allowed_agents": [
+        "intake_agent",
+        "coverage_agent",
+        "fraud_agent",
+        "severity_agent",
+        "recommendation_agent",
+        "explainability_agent"
+      ],
+      "model_profile_id": "default_gpt35",
+      "max_iterations": 10,
+      "iteration_timeout_seconds": 30,
+      "output_schema": {
+        "type": "object",
+        "required": ["status", "evidence_map", "agents_executed"],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["completed", "completed_with_warning", "failed"]
+          },
+          "completion_reason": {
+            "type": "string",
+            "enum": [
+              "all_objectives_achieved",
+              "max_iterations_reached",
+              "timeout",
+              "token_budget_exceeded",
+              "error"
+            ]
+          },
+          "evidence_map": {
+            "type": "object",
+            "required": ["decision", "supporting_evidence", "assumptions", "limitations"],
+            "properties": {
+              "decision": {"type": "object"},
+              "supporting_evidence": {"type": "array"},
+              "assumptions": {"type": "array"},
+              "limitations": {"type": "array"},
+              "agent_chain": {"type": "array"}
+            }
+          },
+          "recommendation": {"type": "object"},
+          "agents_executed": {
+            "type": "array",
+            "items": {"type": "string"}
+          },
+          "total_iterations": {"type": "integer"},
+          "warnings": {
+            "type": "array",
+            "items": {"type": "string"}
+          }
+        }
+      },
+      "context_requirements": {
+        "requires_prior_outputs": [],
+        "max_context_tokens": 10000
+      }
+    },
+    {
+      "agent_id": "intake_agent",
+      "name": "Intake & Normalization Agent",
+      "description": "Validates and normalizes incoming claim data into standard schema. Use schema_validator tool to check for missing/invalid fields and assess data completeness.",
+      "capabilities": [
+        "claim_validation",
+        "data_normalization",
+        "data_completeness_analysis"
+      ],
+      "allowed_tools": [
+        "schema_validator"
+      ],
+      "model_profile_id": "default_gpt35",
+      "max_iterations": 3,
+      "iteration_timeout_seconds": 30,
+      "output_schema": {
+        "type": "object",
+        "required": ["agent_id", "timestamp", "normalized_claim", "data_quality_score", "validation_passed"],
+        "properties": {
+          "agent_id": {"type": "string"},
+          "timestamp": {"type": "string"},
+          "version": {"type": "string", "default": "1.0"},
+          "normalized_claim": {"type": "object"},
+          "data_quality_score": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "data_quality_issues": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["field", "issue_type", "severity", "message"],
+              "properties": {
+                "field": {"type": "string"},
+                "issue_type": {"type": "string"},
+                "severity": {"type": "string"},
+                "message": {"type": "string"}
+              }
+            }
+          },
+          "validation_passed": {"type": "boolean"},
+          "normalization_changes": {
+            "type": "array",
+            "items": {"type": "string"}
+          }
+        },
+        "additionalProperties": false
+      },
+      "context_requirements": {
+        "requires_prior_outputs": [],
+        "max_context_tokens": 4000
+      }
+    },
+    {
+      "agent_id": "coverage_agent",
+      "name": "Coverage & Policy Agent",
+      "description": "Determines coverage eligibility, limits, and exclusions for the claim",
+      "capabilities": [
+        "coverage_determination",
+        "policy_validation",
+        "exclusion_analysis"
+      ],
+      "allowed_tools": [
+        "policy_snapshot",
+        "coverage_rules"
+      ],
+      "model_profile_id": "default_gpt35",
+      "max_iterations": 4,
+      "iteration_timeout_seconds": 30,
+      "output_schema": {
+        "type": "object",
+        "required": ["agent_id", "timestamp", "coverage_determination", "coverage_amount", "deductible_amount", "coverage_percentage", "reasoning"],
+        "properties": {
+          "agent_id": {"type": "string"},
+          "timestamp": {"type": "string"},
+          "version": {"type": "string", "default": "1.0"},
+          "coverage_determination": {
+            "type": "string",
+            "enum": ["approved", "partial", "denied", "pending_review"]
+          },
+          "coverage_amount": {
+            "type": "number",
+            "minimum": 0
+          },
+          "deductible_amount": {
+            "type": "number",
+            "minimum": 0
+          },
+          "coverage_percentage": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "exclusions_triggered": {
+            "type": "array",
+            "items": {"type": "string"}
+          },
+          "coverage_limits_applied": {
+            "type": "object"
+          },
+          "reasoning": {"type": "string"}
+        },
+        "additionalProperties": false
+      },
+      "context_requirements": {
+        "requires_prior_outputs": ["intake"],
+        "max_context_tokens": 5000
+      }
+    },
+    {
+      "agent_id": "fraud_agent",
+      "name": "Fraud Signal Agent",
+      "description": "Evaluates fraud indicators using rule-based and heuristic analysis",
+      "capabilities": [
+        "fraud_detection",
+        "risk_scoring",
+        "pattern_analysis",
+        "anomaly_detection"
+      ],
+      "allowed_tools": [
+        "fraud_rules",
+        "similarity"
+      ],
+      "model_profile_id": "default_gpt35",
+      "max_iterations": 5,
+      "iteration_timeout_seconds": 45,
+      "output_schema": {
+        "type": "object",
+        "required": ["agent_id", "timestamp", "fraud_score", "risk_band", "siu_referral_required", "rationale"],
+        "properties": {
+          "agent_id": {"type": "string"},
+          "timestamp": {"type": "string"},
+          "version": {"type": "string", "default": "1.0"},
+          "fraud_score": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "risk_band": {
+            "type": "string",
+            "enum": ["low", "medium", "high", "critical"]
+          },
+          "triggered_indicators": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["indicator_id", "indicator_name", "severity", "confidence", "description"],
+              "properties": {
+                "indicator_id": {"type": "string"},
+                "indicator_name": {"type": "string"},
+                "severity": {"type": "string"},
+                "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+                "description": {"type": "string"}
+              }
+            }
+          },
+          "siu_referral_required": {"type": "boolean"},
+          "similar_claims_analysis": {"type": "object"},
+          "rationale": {"type": "string"}
+        },
+        "additionalProperties": false
+      },
+      "context_requirements": {
+        "requires_prior_outputs": ["intake", "coverage"],
+        "max_context_tokens": 6000
+      }
+    },
+    {
+      "agent_id": "severity_agent",
+      "name": "Severity & Complexity Agent",
+      "description": "Assesses claim complexity and determines severity bands for handling",
+      "capabilities": [
+        "complexity_analysis",
+        "severity_classification",
+        "escalation_detection"
+      ],
+      "allowed_tools": [],
+      "model_profile_id": "default_gpt35",
+      "max_iterations": 3,
+      "iteration_timeout_seconds": 30,
+      "output_schema": {
+        "type": "object",
+        "required": ["agent_id", "timestamp", "complexity_level", "complexity_score", "estimated_processing_days", "required_expertise_level", "special_handling_required", "assessment_rationale"],
+        "properties": {
+          "agent_id": {"type": "string"},
+          "timestamp": {"type": "string"},
+          "version": {"type": "string", "default": "1.0"},
+          "complexity_level": {
+            "type": "string",
+            "enum": ["low", "medium", "high", "critical"]
+          },
+          "complexity_score": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "complexity_factors": {
+            "type": "array",
+            "items": {"type": "string"}
+          },
+          "estimated_processing_days": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "required_expertise_level": {"type": "string"},
+          "special_handling_required": {"type": "boolean"},
+          "assessment_rationale": {"type": "string"}
+        },
+        "additionalProperties": false
+      },
+      "context_requirements": {
+        "requires_prior_outputs": ["intake", "coverage", "fraud"],
+        "max_context_tokens": 5000
+      }
+    },
+    {
+      "agent_id": "recommendation_agent",
+      "name": "Action Recommendation Agent",
+      "description": "Determines next best action based on coverage, fraud, and severity analysis",
+      "capabilities": [
+        "decision_recommendation",
+        "action_planning",
+        "risk_alignment"
+      ],
+      "allowed_tools": [
+        "decision_rules"
+      ],
+      "model_profile_id": "default_gpt35",
+      "max_iterations": 3,
+      "iteration_timeout_seconds": 30,
+      "output_schema": {
+        "type": "object",
+        "required": ["agent_id", "timestamp", "recommended_action", "action_priority", "processing_track", "next_steps", "estimated_timeline_days", "confidence", "rationale"],
+        "properties": {
+          "agent_id": {"type": "string"},
+          "timestamp": {"type": "string"},
+          "version": {"type": "string", "default": "1.0"},
+          "recommended_action": {"type": "string"},
+          "action_priority": {"type": "string"},
+          "processing_track": {
+            "type": "string",
+            "enum": ["fast_track", "standard", "standard_enhanced", "complex", "investigation", "expedited"]
+          },
+          "required_approvals": {
+            "type": "array",
+            "items": {"type": "string"}
+          },
+          "next_steps": {
+            "type": "array",
+            "items": {"type": "string"},
+            "minItems": 1
+          },
+          "estimated_timeline_days": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "rationale": {"type": "string"}
+        },
+        "additionalProperties": false
+      },
+      "context_requirements": {
+        "requires_prior_outputs": ["intake", "coverage", "fraud", "severity"],
+        "max_context_tokens": 6000
+      }
+    },
+    {
+      "agent_id": "explainability_agent",
+      "name": "Explainability Agent",
+      "description": "Compiles comprehensive evidence map explaining the decision chain",
+      "capabilities": [
+        "evidence_compilation",
+        "decision_explanation",
+        "assumption_identification",
+        "limitation_analysis"
+      ],
+      "allowed_tools": [],
+      "model_profile_id": "default_gpt35",
+      "max_iterations": 2,
+      "iteration_timeout_seconds": 30,
+      "output_schema": {
+        "type": "object",
+        "required": ["agent_id", "timestamp", "decision", "supporting_evidence", "agent_chain", "explanation"],
+        "properties": {
+          "agent_id": {"type": "string"},
+          "timestamp": {"type": "string"},
+          "version": {"type": "string", "default": "1.0"},
+          "decision": {
+            "type": "object",
+            "required": ["outcome", "confidence", "basis"],
+            "properties": {
+              "outcome": {"type": "string"},
+              "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+              "basis": {"type": "string"}
+            }
+          },
+          "supporting_evidence": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["source", "evidence_type", "summary", "weight"],
+              "properties": {
+                "source": {"type": "string"},
+                "evidence_type": {"type": "string"},
+                "summary": {"type": "string"},
+                "weight": {"type": "number", "minimum": 0, "maximum": 1}
+              }
+            },
+            "minItems": 1
+          },
+          "assumptions": {
+            "type": "array",
+            "items": {"type": "string"}
+          },
+          "limitations": {
+            "type": "array",
+            "items": {"type": "string"}
+          },
+          "agent_chain": {
+            "type": "array",
+            "items": {"type": "string"},
+            "minItems": 1
+          },
+          "alternative_outcomes": {
+            "type": "array",
+            "items": {"type": "object"}
+          },
+          "explanation": {"type": "string"}
+        },
+        "additionalProperties": false
+      },
+      "context_requirements": {
+        "requires_prior_outputs": ["intake", "coverage", "fraud", "severity", "recommendation"],
+        "max_context_tokens": 8000
+      }
+    }
+  ]
+}

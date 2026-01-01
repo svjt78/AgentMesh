@@ -1,0 +1,2 @@
+{"checkpoint_instance_id": "cp_e773b472c76a", "session_id": "demo-session-002", "checkpoint_id": "data_correction", "required_role": "claims_adjuster", "created_at": "2025-12-31T01:20:13.381679Z"}
+{"checkpoint_instance_id": "cp_dc73a9bec594", "session_id": "demo-session-003", "checkpoint_id": "high_value_approval", "required_role": "approver", "created_at": "2025-12-31T01:20:13.386403Z"}

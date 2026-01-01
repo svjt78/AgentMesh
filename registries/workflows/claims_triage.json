@@ -1,0 +1,272 @@
+{
+  "workflow_id": "claims_triage",
+  "name": "Claims Triage Workflow",
+  "description": "End-to-end claims triage from intake through explainability",
+  "version": "1.0.0",
+  "mode": "advisory",
+  "goal": "Complete comprehensive claim triage with coverage, fraud, and recommendation analysis",
+  "steps": [
+    {
+      "step_id": "intake",
+      "step_name": "Claim Intake & Normalization",
+      "agent_id": "intake_agent",
+      "sequence": 1,
+      "timeout_seconds": 60,
+      "retry_policy": {
+        "max_retries": 2,
+        "retry_on_errors": [
+          "timeout",
+          "tool_failure"
+        ]
+      },
+      "on_success": "coverage",
+      "on_failure": "terminate_with_error",
+      "context_compilation": {
+        "include_original_input": true,
+        "include_prior_outputs": [],
+        "max_context_tokens": 4000
+      }
+    },
+    {
+      "step_id": "coverage",
+      "step_name": "Coverage Determination",
+      "agent_id": "coverage_agent",
+      "sequence": 2,
+      "timeout_seconds": 90,
+      "retry_policy": {
+        "max_retries": 2,
+        "retry_on_errors": [
+          "timeout",
+          "tool_failure"
+        ]
+      },
+      "on_success": "fraud",
+      "on_failure": "terminate_with_error",
+      "context_compilation": {
+        "include_original_input": true,
+        "include_prior_outputs": [
+          "intake"
+        ],
+        "max_context_tokens": 5000
+      }
+    },
+    {
+      "step_id": "fraud",
+      "step_name": "Fraud Signal Detection",
+      "agent_id": "fraud_agent",
+      "sequence": 3,
+      "timeout_seconds": 120,
+      "retry_policy": {
+        "max_retries": 2,
+        "retry_on_errors": [
+          "timeout"
+        ]
+      },
+      "on_success": "severity",
+      "on_failure": "severity",
+      "context_compilation": {
+        "include_original_input": true,
+        "include_prior_outputs": [
+          "intake",
+          "coverage"
+        ],
+        "max_context_tokens": 6000
+      },
+      "allow_partial_failure": true
+    },
+    {
+      "step_id": "severity",
+      "step_name": "Severity & Complexity Assessment",
+      "agent_id": "severity_agent",
+      "sequence": 4,
+      "timeout_seconds": 60,
+      "retry_policy": {
+        "max_retries": 2,
+        "retry_on_errors": [
+          "timeout"
+        ]
+      },
+      "on_success": "recommendation",
+      "on_failure": "recommendation",
+      "context_compilation": {
+        "include_original_input": false,
+        "include_prior_outputs": [
+          "intake",
+          "coverage",
+          "fraud"
+        ],
+        "max_context_tokens": 5000
+      },
+      "allow_partial_failure": true
+    },
+    {
+      "step_id": "recommendation",
+      "step_name": "Action Recommendation",
+      "agent_id": "recommendation_agent",
+      "sequence": 5,
+      "timeout_seconds": 60,
+      "retry_policy": {
+        "max_retries": 1,
+        "retry_on_errors": [
+          "timeout"
+        ]
+      },
+      "on_success": "explainability",
+      "on_failure": "terminate_with_error",
+      "context_compilation": {
+        "include_original_input": false,
+        "include_prior_outputs": [
+          "intake",
+          "coverage",
+          "fraud",
+          "severity"
+        ],
+        "max_context_tokens": 6000
+      }
+    },
+    {
+      "step_id": "explainability",
+      "step_name": "Evidence Map Generation",
+      "agent_id": "explainability_agent",
+      "sequence": 6,
+      "timeout_seconds": 60,
+      "retry_policy": {
+        "max_retries": 1,
+        "retry_on_errors": [
+          "timeout"
+        ]
+      },
+      "on_success": "complete",
+      "on_failure": "complete_with_warning",
+      "context_compilation": {
+        "include_original_input": false,
+        "include_prior_outputs": [
+          "intake",
+          "coverage",
+          "fraud",
+          "severity",
+          "recommendation"
+        ],
+        "max_context_tokens": 8000
+      },
+      "allow_partial_failure": true
+    }
+  ],
+  "suggested_sequence": [
+    "intake_agent",
+    "coverage_agent",
+    "fraud_agent",
+    "severity_agent",
+    "recommendation_agent",
+    "explainability_agent"
+  ],
+  "required_agents": [
+    "intake_agent",
+    "explainability_agent"
+  ],
+  "optional_agents": [
+    "fraud_agent",
+    "severity_agent"
+  ],
+  "completion_criteria": {
+    "required_outputs": [
+      "evidence_map",
+      "recommendation"
+    ],
+    "required_agents_executed": [
+      "intake_agent",
+      "explainability_agent"
+    ],
+    "min_agents_executed": 3,
+    "evidence_map_required": true
+  },
+  "constraints": {
+    "_comment": "These defaults can be overridden by environment variables: WORKFLOW_MAX_DURATION_SECONDS, ORCHESTRATOR_MAX_ITERATIONS, WORKFLOW_MAX_AGENT_INVOCATIONS",
+    "max_total_duration_seconds": 300,
+    "max_orchestrator_iterations": 10,
+    "max_agent_invocations": 20,
+    "must_produce_evidence_map": true
+  },
+  "metadata": {
+    "business_owner": "Claims Operations",
+    "expected_duration_seconds": 240
+  },
+  "hitl_checkpoints": [
+    {
+      "checkpoint_id": "fraud_review",
+      "checkpoint_type": "decision",
+      "trigger_point": "after_agent",
+      "agent_id": "fraud_agent",
+      "checkpoint_name": "High Fraud Score Review",
+      "description": "Review fraud detection results when fraud score is high",
+      "required_role": "fraud_investigator",
+      "trigger_condition": {
+        "type": "output_based",
+        "condition": "fraud_score > 0.7"
+      },
+      "timeout_config": {
+        "enabled": true,
+        "timeout_seconds": 3600,
+        "on_timeout": "auto_approve"
+      },
+      "notification_config": {
+        "enabled": true,
+        "channels": [
+          "dashboard"
+        ],
+        "urgency": "high"
+      },
+      "ui_schema": {
+        "display_fields": [
+          "fraud_score",
+          "fraud_signals",
+          "similar_claims"
+        ],
+        "decision_options": [
+          {
+            "value": "confirm_fraud",
+            "label": "Confirm Fraud - Escalate",
+            "description": "High confidence fraud detected - escalate for investigation"
+          },
+          {
+            "value": "false_positive",
+            "label": "False Positive - Continue",
+            "description": "Legitimate claim - continue normal processing"
+          },
+          {
+            "value": "needs_investigation",
+            "label": "Requires Further Investigation",
+            "description": "Inconclusive - assign to fraud investigator"
+          }
+        ]
+      }
+    },
+    {
+      "checkpoint_id": "final_approval",
+      "checkpoint_type": "approval",
+      "trigger_point": "before_completion",
+      "checkpoint_name": "Final Recommendation Approval",
+      "description": "Review and approve final claim recommendation before workflow completion",
+      "required_role": "approver",
+      "timeout_config": {
+        "enabled": false
+      },
+      "notification_config": {
+        "enabled": true,
+        "channels": [
+          "dashboard"
+        ],
+        "urgency": "normal"
+      },
+      "ui_schema": {
+        "display_evidence_map": true,
+        "display_agent_chain": true,
+        "actions": [
+          "approve",
+          "reject",
+          "request_revision"
+        ]
+      }
+    }
+  ]
+}

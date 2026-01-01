@@ -1,0 +1,284 @@
+{
+  "_description": "Edge Case - Complex multi-vehicle accident with injuries, disputed liability, and coverage questions",
+  "claim_id": "CLM-2024-EDGE-001",
+  "policy_id": "POL-003",
+  "claim_date": "2024-03-18T09:15:00Z",
+  "incident_date": "2024-03-17T19:45:00Z",
+  "loss_type": "collision",
+  "claim_amount": 38500.00,
+
+  "claimant": {
+    "name": "Sarah Martinez",
+    "email": "sarah.martinez@example.com",
+    "phone": "(555) 444-3333",
+    "address": {
+      "street": "456 Elm Street",
+      "city": "Chicago",
+      "state": "IL",
+      "zip": "60601"
+    },
+    "date_of_birth": "1978-09-22",
+    "license_number": "M123456789",
+    "license_state": "IL"
+  },
+
+  "policy_details": {
+    "policy_number": "POL-003",
+    "policy_type": "auto",
+    "effective_date": "2020-06-01",
+    "expiration_date": "2025-06-01",
+    "coverage_type": "full_coverage",
+    "deductible": 1000.00,
+    "coverage_limit": 100000.00,
+    "premium_status": "current",
+    "policy_age_days": 1385,
+    "underinsured_motorist": true,
+    "medical_payments_coverage": true,
+    "medical_payments_limit": 5000.00
+  },
+
+  "incident_details": {
+    "location": "Interstate 90 Westbound, Mile Marker 47, Chicago, IL",
+    "description": "Multi-vehicle accident during rush hour. Three cars involved. Initial impact between Car A (claimant's vehicle) and Car B in left lane. Car C rear-ended claimant's vehicle seconds later. Heavy rain and reduced visibility. Claimant claims Car B changed lanes without signaling and hit claimant. Car B driver claims claimant swerved into their lane. Car C admits following too closely.",
+    "weather_conditions": "heavy_rain",
+    "road_conditions": "wet",
+    "time_of_day": "19:45",
+    "lighting": "dusk",
+    "police_report_number": "CPD-2024-031702",
+    "police_department": "Chicago Police Department",
+    "at_fault_party": "disputed",
+    "traffic_citations": [
+      "Car C driver cited for following too closely"
+    ],
+    "vehicles_involved": 3,
+    "highway_incident": true
+  },
+
+  "vehicle_details": {
+    "make": "Honda",
+    "model": "CR-V",
+    "year": 2021,
+    "vin": "2HKRW2H85MH123456",
+    "mileage": 32450,
+    "color": "blue",
+    "license_plate": "IL-ABC789",
+    "license_state": "IL",
+    "purchase_date": "2021-05-15",
+    "purchase_price": 32000.00,
+    "current_value": 28000.00,
+    "passengers_at_time": 2,
+    "commercial_use": false
+  },
+
+  "damage_assessment": {
+    "damage_areas": [
+      "front_left_fender",
+      "front_left_door",
+      "rear_bumper",
+      "rear_hatch",
+      "left_side_mirror",
+      "airbags",
+      "frame_damage"
+    ],
+    "severity": "major",
+    "driveable": false,
+    "towed": true,
+    "tow_company": "Highway Rescue Towing",
+    "tow_destination": "Premium Auto Collision Center, 789 Repair Ave, Chicago, IL",
+    "preliminary_estimate": 28500.00,
+    "structural_damage_suspected": true,
+    "total_loss_assessment_pending": true
+  },
+
+  "injuries": {
+    "reported": true,
+    "claimant_injured": true,
+    "passengers_injured": true,
+    "other_party_injured": true,
+    "medical_treatment_sought": true,
+    "claimant_injuries": [
+      "neck_pain",
+      "back_pain",
+      "shoulder_strain",
+      "mild_concussion"
+    ],
+    "claimant_treatment": "Emergency room visit, referred to orthopedic specialist",
+    "passenger_injuries": [
+      {
+        "name": "Emily Martinez",
+        "relationship": "daughter",
+        "age": 16,
+        "injuries": ["minor_whiplash", "bruising"],
+        "treatment": "Emergency room visit, released same day"
+      }
+    ],
+    "medical_expenses_estimated": 10000.00,
+    "lost_wages_claimed": true,
+    "lost_wages_amount": 2500.00,
+    "ongoing_treatment_expected": true
+  },
+
+  "witnesses": [
+    {
+      "name": "David Chen",
+      "phone": "(555) 777-8888",
+      "email": "david.chen@example.com",
+      "statement": "I was in Car C. I saw Car A and Car B collide, but couldn't tell who was at fault due to the rain. I hit Car A's rear because I couldn't stop in time."
+    },
+    {
+      "name": "Patricia Wilson",
+      "phone": "(555) 666-5555",
+      "email": "p.wilson@example.com",
+      "statement": "I was driving behind all three cars. It looked like Car B moved into Car A's lane suddenly, but visibility was poor."
+    }
+  ],
+
+  "other_party": {
+    "vehicles": [
+      {
+        "designation": "Car B",
+        "driver_name": "James Thompson",
+        "insurance_company": "Reliable Auto Insurance",
+        "policy_number": "RAI-456789",
+        "contact_phone": "(555) 222-1111",
+        "vehicle_make": "Toyota",
+        "vehicle_model": "Highlander",
+        "vehicle_year": 2022,
+        "license_plate": "IL-XYZ456",
+        "admitted_fault": false,
+        "disputes_liability": true,
+        "injury_claimed": true
+      },
+      {
+        "designation": "Car C",
+        "driver_name": "David Chen",
+        "insurance_company": "Budget Insurance Co",
+        "policy_number": "BIC-789012",
+        "contact_phone": "(555) 777-8888",
+        "vehicle_make": "Ford",
+        "vehicle_model": "Escape",
+        "vehicle_year": 2020,
+        "license_plate": "IL-DEF123",
+        "admitted_fault": true,
+        "partial_fault_accepted": true,
+        "injury_claimed": false
+      }
+    ]
+  },
+
+  "documentation": {
+    "photos_submitted": true,
+    "photo_count": 28,
+    "police_report_submitted": true,
+    "repair_estimates_submitted": 3,
+    "witness_statements_submitted": 2,
+    "medical_records_submitted": true,
+    "medical_records_count": 4,
+    "lost_wages_documentation": true,
+    "dashcam_footage": false,
+    "traffic_camera_footage_available": "pending_police_report"
+  },
+
+  "claim_history": {
+    "previous_claims_count": 2,
+    "previous_claims": [
+      {
+        "claim_id": "CLM-2019-456",
+        "date": "2019-11-20",
+        "type": "collision",
+        "amount": 6500.00,
+        "reason": "Minor accident in parking lot",
+        "status": "closed_paid"
+      },
+      {
+        "claim_id": "CLM-2017-123",
+        "date": "2017-03-15",
+        "type": "comprehensive",
+        "amount": 3200.00,
+        "reason": "Windshield and hail damage",
+        "status": "closed_paid"
+      }
+    ],
+    "claims_in_last_3_years": 0,
+    "claims_in_last_5_years": 1
+  },
+
+  "fraud_indicators": {
+    "duplicate_claim": false,
+    "suspicious_timing": false,
+    "excessive_amount": false,
+    "provider_anomaly": false,
+    "conflicting_statements": true,
+    "rushed_filing": false,
+    "medical_treatment_excessive": false,
+    "injury_claims_increasing": false
+  },
+
+  "complexity_factors": {
+    "multi_vehicle_accident": true,
+    "disputed_liability": true,
+    "injury_claims": true,
+    "potential_total_loss": true,
+    "multiple_insurers_involved": true,
+    "adverse_weather_conditions": true,
+    "conflicting_witness_statements": true,
+    "subrogation_likely": true,
+    "litigation_risk": "medium",
+    "requires_special_investigation": true,
+    "medical_assessment_needed": true,
+    "lost_wages_verification_needed": true
+  },
+
+  "coverage_questions": {
+    "coverage_determination_complex": true,
+    "comparative_negligence_applies": true,
+    "underinsured_motorist_may_apply": true,
+    "medical_payments_coverage_applies": true,
+    "exclusions_to_review": [
+      "intentional_acts",
+      "racing",
+      "commercial_use"
+    ],
+    "policy_limits_adequate": true,
+    "coordination_of_benefits_needed": true
+  },
+
+  "metadata": {
+    "filing_method": "online_portal",
+    "filed_by": "policyholder",
+    "contact_preference": "email",
+    "preferred_repair_shop": "Premium Auto Collision Center",
+    "rental_car_needed": true,
+    "rental_duration_days": 21,
+    "attorney_involved": false,
+    "attorney_expected": "possible",
+    "requires_adjuster_site_visit": true,
+    "requires_independent_medical_exam": true,
+    "requires_accident_reconstruction": "recommended",
+    "urgency": "medium",
+    "settlement_preference": "fair_resolution"
+  },
+
+  "special_notes": {
+    "claimant_cooperation": "excellent",
+    "documentation_quality": "comprehensive",
+    "credibility_assessment": "high",
+    "claim_legitimacy": "appears_legitimate_but_complex",
+    "settlement_challenges": [
+      "Disputed liability with Car B",
+      "Multiple parties involved",
+      "Injury extent not yet fully determined",
+      "Potential structural damage affecting vehicle value",
+      "Coordination with other insurers needed"
+    ],
+    "recommended_actions": [
+      "Obtain complete police report with diagrams",
+      "Request traffic camera footage",
+      "Schedule independent medical examination",
+      "Conduct detailed vehicle inspection for total loss determination",
+      "Interview all witnesses",
+      "Contact other insurers for coordination",
+      "Consider mediation for liability dispute"
+    ]
+  }
+}
