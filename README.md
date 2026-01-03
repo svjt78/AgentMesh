@@ -110,7 +110,7 @@ AgentMesh is a **production-ready multi-agent orchestration platform** specifica
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                    Frontend (Next.js)                       │
-│  - Run Claim Form    - Live Progress    - Evidence Map     │
+│  - Run Workflow Form - Live Progress    - Evidence Map     │
 └─────────────────────────┬───────────────────────────────────┘
                           │ HTTP + SSE
 ┌─────────────────────────▼───────────────────────────────────┐
@@ -224,9 +224,12 @@ docker compose logs -f orchestrator
 5. **Access the UI**
 
 - **Frontend Home**: http://localhost:3016
-- **Run Claim**: http://localhost:3016/run-claim
+- **Run Workflow**: http://localhost:3016/run-claim
 - **Session Replay**: http://localhost:3016/replay
+- **Replay Detail**: http://localhost:3016/replay/{session_id}
 - **Evidence Map**: http://localhost:3016/evidence
+- **Memory Browser**: http://localhost:3016/memory
+- **Artifact Versions**: http://localhost:3016/artifacts
 - **HITL Dashboard**: http://localhost:3016/hitl
 - **Configuration UI**: http://localhost:3016/config
 - **API Documentation**: http://localhost:8016/docs
@@ -539,6 +542,7 @@ System-wide execution limits and safety thresholds.
 - `safety`: Error recovery and circuit breaker mechanisms
 - `schema`: Output validation configuration
 - `checkpoint`: HITL checkpoint defaults
+- `context_engineering`: Master toggle and pipeline enablement
 
 **Note**: Values in this file override hardcoded defaults in `config.py`. API keys and service URLs remain in `.env` for security.
 
@@ -1490,6 +1494,15 @@ Response 200:
   },
   "generated_at": "..."
 }
+```
+
+#### Context Engineering (Session)
+
+```http
+GET /sessions/{session_id}/context-lineage
+GET /sessions/{session_id}/context-stats
+GET /sessions/{session_id}/token-budget-timeline
+POST /sessions/{session_id}/trigger-compaction
 ```
 
 #### Health Check

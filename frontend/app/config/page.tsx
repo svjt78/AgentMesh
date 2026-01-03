@@ -9,8 +9,9 @@ import WorkflowsTab from '@/components/config/WorkflowsTab';
 import HITLCheckpointsTab from '@/components/config/HITLCheckpointsTab';
 import GovernanceTab from '@/components/config/GovernanceTab';
 import SystemSettingsTab from '@/components/config/SystemSettingsTab';
+import ContextEngineeringTab from '@/components/config/ContextEngineeringTab';
 
-type TabName = 'orchestrator' | 'agents' | 'tools' | 'models' | 'workflows' | 'hitl_checkpoints' | 'governance' | 'system';
+type TabName = 'orchestrator' | 'agents' | 'tools' | 'models' | 'workflows' | 'hitl_checkpoints' | 'governance' | 'system' | 'context_engineering';
 
 export default function ConfigPage() {
   const [activeTab, setActiveTab] = useState<TabName>('orchestrator');
@@ -24,6 +25,7 @@ export default function ConfigPage() {
     { id: 'hitl_checkpoints', label: 'HITL Checkpoints' },
     { id: 'governance', label: 'Governance' },
     { id: 'system', label: 'Controllability' },
+    { id: 'context_engineering', label: 'Context Engineering' },
   ];
 
   return (
@@ -65,6 +67,7 @@ export default function ConfigPage() {
           {activeTab === 'hitl_checkpoints' && <HITLCheckpointsTab />}
           {activeTab === 'governance' && <GovernanceTab />}
           {activeTab === 'system' && <SystemSettingsTab />}
+          {activeTab === 'context_engineering' && <ContextEngineeringTab />}
         </div>
       </div>
     </div>

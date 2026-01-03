@@ -544,6 +544,8 @@ async def update_system_config(request: SystemConfigUpdateRequest):
         # Update configuration
         config_dict = request.model_dump()
         registry.update_system_config(config_dict)
+        from ..config import reload_config
+        reload_config()
 
         return SystemConfigResponse(**config_dict)
     except ValueError as e:
@@ -551,6 +553,69 @@ async def update_system_config(request: SystemConfigUpdateRequest):
     except Exception as e:
         logger.error(f"Error updating system config: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Internal server error")
+
+
+# ========== CONTEXT STRATEGIES ==========
+
+@router.get("/context/strategies")
+async def get_context_strategies():
+    """Get context engineering strategies configuration."""
+    try:
+        import json
+        from pathlib import Path
+
+        strategies_candidates = [
+            Path("/registries/context_strategies.json"),
+            Path("registries/context_strategies.json"),
+            Path("../../../registries/context_strategies.json"),
+        ]
+        strategies_path = next((path for path in strategies_candidates if path.exists()), None)
+
+        if strategies_path is None:
+            raise HTTPException(status_code=404, detail="Context strategies configuration not found")
+
+        with open(strategies_path, "r") as f:
+            strategies = json.load(f)
+
+        return strategies
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting context strategies: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.put("/context/strategies")
+async def update_context_strategies(strategies: dict):
+    """Update context engineering strategies configuration."""
+    try:
+        import json
+        from pathlib import Path
+
+        strategies_candidates = [
+            Path("/registries/context_strategies.json"),
+            Path("registries/context_strategies.json"),
+            Path("../../../registries/context_strategies.json"),
+        ]
+        strategies_path = next((path for path in strategies_candidates if path.exists()), None)
+        if strategies_path is None:
+            strategies_path = strategies_candidates[0]
+            strategies_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Validate basic structure
+        if "version" not in strategies:
+            strategies["version"] = "1.0.0"
+
+        # Write to file
+        with open(strategies_path, "w") as f:
+            json.dump(strategies, f, indent=2)
+
+        logger.info("Context strategies configuration updated successfully")
+
+        return strategies
+    except Exception as e:
+        logger.error(f"Error updating context strategies: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ========== UTILITY ==========

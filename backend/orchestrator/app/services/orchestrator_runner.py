@@ -96,7 +96,7 @@ class OrchestratorRunner:
         # Dependencies
         self.registry = get_registry_manager()
         self.governance = create_governance_enforcer(session_id)
-        self.context_compiler = create_context_compiler()
+        self.context_compiler = create_context_compiler(session_id)
         self.storage = get_session_writer()
         self.progress_store = get_progress_store()
         self.checkpoint_manager = get_checkpoint_manager()
@@ -117,6 +117,7 @@ class OrchestratorRunner:
         self.agent_invocations: Dict[str, int] = {}  # Track invocation counts
         self.prior_outputs: Dict[str, Dict[str, Any]] = {}  # Accumulate agent outputs
         self.agents_executed_order: List[str] = []  # Track execution order
+        self.last_invoked_agent_id: Optional[str] = None  # Track for handoff scoping (Phase 6)
 
     def execute(
         self,
@@ -606,12 +607,16 @@ class OrchestratorRunner:
 
         Demonstrates: Composition of ReAct loops (meta-loop → agent loop).
         """
+        # Phase 6: Track handoff source for context scoping
+        from_agent_id = self.last_invoked_agent_id
+
         # Create agent ReAct loop controller
         agent_loop = create_agent_react_loop(
             session_id=self.session_id,
             agent_id=agent_id,
             llm_client=self.llm_client,
-            tools_client=None  # Phase 4 integration point
+            tools_client=None,  # Phase 4 integration point
+            from_agent_id=from_agent_id  # Phase 6: Pass handoff source
         )
 
         # Execute agent's ReAct loop
@@ -620,6 +625,10 @@ class OrchestratorRunner:
             original_input=original_input,
             prior_outputs=self.prior_outputs
         )
+
+        # Phase 6: Update handoff tracking after successful invocation
+        if result.status == "completed":
+            self.last_invoked_agent_id = agent_id
 
         return result
 

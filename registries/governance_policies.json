@@ -144,6 +144,175 @@
         "max_timeout_seconds": 86400,
         "default_timeout_seconds": 3600
       }
+    },
+    "context_governance": {
+      "description": "Controls context engineering behaviors, limits, and auditing",
+      "enforcement_level": "strict",
+      "max_context_tokens_per_agent": 10000,
+      "max_memory_retrievals_per_invocation": 10,
+      "max_artifact_loads_per_invocation": 5,
+      "compaction_approval_required": false,
+      "allow_llm_summarization": true,
+      "context_auditing": {
+        "log_all_compilations": true,
+        "log_truncations": true,
+        "log_compactions": true,
+        "_description": "Comprehensive logging of context engineering decisions for governance and debugging"
+      },
+      "_description": "Governance policies for context engineering features including token limits, memory/artifact access, and auditing requirements"
+    },
+    "multi_agent_handoffs": {
+      "description": "Controls context handoff patterns between agents for scoped context sharing",
+      "enforcement_level": "strict",
+      "default_handoff_mode": "scoped",
+      "enable_conversation_translation": true,
+      "audit_all_handoffs": true,
+      "agent_handoff_rules": [
+        {
+          "from_agent_id": "fraud_agent",
+          "to_agent_id": "recommendation_agent",
+          "handoff_mode": "scoped",
+          "allowed_context_fields": [
+            "fraud_score",
+            "fraud_indicators",
+            "risk_level",
+            "fraud_explanation"
+          ],
+          "conversation_translation": {
+            "enabled": true,
+            "summarize": false,
+            "filter_enabled": true
+          },
+          "rule_id": "fraud_to_recommendation",
+          "_description": "Fraud agent can pass only fraud-related fields to recommendation agent"
+        },
+        {
+          "from_agent_id": "coverage_agent",
+          "to_agent_id": "severity_agent",
+          "handoff_mode": "scoped",
+          "allowed_context_fields": [
+            "coverage_determination",
+            "policy_limits",
+            "coverage_amount",
+            "covered_perils"
+          ],
+          "conversation_translation": {
+            "enabled": true,
+            "summarize": false,
+            "filter_enabled": true
+          },
+          "rule_id": "coverage_to_severity",
+          "_description": "Coverage agent passes only coverage-related fields to severity agent"
+        },
+        {
+          "from_agent_id": "intake_agent",
+          "to_agent_id": "*",
+          "handoff_mode": "full",
+          "conversation_translation": {
+            "enabled": false
+          },
+          "rule_id": "intake_to_all",
+          "_description": "Intake agent output is safe to share widely - full context mode"
+        },
+        {
+          "from_agent_id": "severity_agent",
+          "to_agent_id": "recommendation_agent",
+          "handoff_mode": "scoped",
+          "allowed_context_fields": [
+            "severity_classification",
+            "complexity_score",
+            "estimated_cost"
+          ],
+          "blocked_context_fields": [
+            "internal_notes",
+            "complexity_analysis_details"
+          ],
+          "conversation_translation": {
+            "enabled": true,
+            "summarize": true,
+            "max_summary_tokens": 500
+          },
+          "rule_id": "severity_to_recommendation",
+          "_description": "Severity agent passes classification only, summarizes verbose analysis"
+        },
+        {
+          "from_agent_id": "*",
+          "to_agent_id": "explainability_agent",
+          "handoff_mode": "full",
+          "conversation_translation": {
+            "enabled": false
+          },
+          "rule_id": "all_to_explainability",
+          "_description": "Explainability agent needs full context to generate comprehensive explanations"
+        }
+      ],
+      "_description": "Defines scoped context handoff rules between agents. Handoff modes: 'full' (all context), 'scoped' (selected fields), 'minimal' (no history). Supports conversation translation and field-level filtering."
+    },
+    "context_filtering": {
+      "description": "Deterministic pre-LLM filtering rules for context data",
+      "enforcement_level": "strict",
+      "enabled": false,
+      "rules": [
+        {
+          "rule_id": "filter_old_observations",
+          "description": "Remove observations older than 30 days",
+          "enabled": true,
+          "field": "observations",
+          "condition": {
+            "type": "age_threshold",
+            "max_age_days": 30
+          }
+        },
+        {
+          "rule_id": "mask_ssn",
+          "description": "Mask Social Security Numbers for PII protection",
+          "enabled": true,
+          "field": "original_input",
+          "condition": {
+            "type": "regex_mask",
+            "patterns": [
+              {
+                "pattern": "\\d{3}-\\d{2}-\\d{4}",
+                "replacement": "***-**-****",
+                "description": "SSN format XXX-XX-XXXX"
+              },
+              {
+                "pattern": "\\d{9}",
+                "replacement": "*********",
+                "description": "SSN format XXXXXXXXX (no dashes)"
+              }
+            ]
+          }
+        },
+        {
+          "rule_id": "mask_credit_cards",
+          "description": "Mask credit card numbers for PII protection",
+          "enabled": true,
+          "field": "original_input",
+          "condition": {
+            "type": "regex_mask",
+            "patterns": [
+              {
+                "pattern": "\\d{4}[- ]?\\d{4}[- ]?\\d{4}[- ]?\\d{4}",
+                "replacement": "****-****-****-****",
+                "description": "Credit card format"
+              }
+            ]
+          }
+        },
+        {
+          "rule_id": "remove_debug_logs",
+          "description": "Filter out debug-level log observations",
+          "enabled": false,
+          "field": "observations",
+          "condition": {
+            "type": "field_value_match",
+            "match_field": "log_level",
+            "match_value": "debug"
+          }
+        }
+      ],
+      "_description": "Phase 8: Deterministic filtering rules applied before LLM sees context. Supports age-based filtering, regex masking (PII protection), and field matching. All filtering decisions are logged for audit."
     }
   }
 }

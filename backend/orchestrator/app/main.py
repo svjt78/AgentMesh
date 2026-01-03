@@ -18,7 +18,7 @@ from datetime import datetime
 import logging
 import sys
 
-from .api import runs, sessions, registries, checkpoints
+from .api import runs, sessions, registries, checkpoints, memory, artifacts
 from .api.models import HealthCheckResponse, ErrorResponse
 from .services.registry_manager import init_registry_manager, get_registry_manager
 from .services.storage import init_storage
@@ -82,6 +82,8 @@ app.include_router(runs.router)
 app.include_router(sessions.router)
 app.include_router(registries.router)
 app.include_router(checkpoints.router)
+app.include_router(memory.router)
+app.include_router(artifacts.router)
 
 
 @app.on_event("startup")

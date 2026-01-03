@@ -40,12 +40,14 @@ async def list_sessions(
     reader = get_session_writer()
 
     # Get all session files
-    storage_path = Path("/storage/sessions")
+    from ..config import get_config
+
+    storage_path = Path(get_config().storage_path) / "sessions"
     if not storage_path.exists():
         return []
 
     session_files = sorted(
-        storage_path.glob("*.jsonl"),
+        [f for f in storage_path.glob("*.jsonl") if not f.stem.endswith("_context_lineage")],
         key=lambda f: f.stat().st_mtime,
         reverse=True
     )
@@ -304,6 +306,250 @@ async def get_events_by_type(
         )
 
 
+@router.post("/{session_id}/trigger-compaction")
+async def trigger_compaction(
+    session_id: str,
+    method: Optional[str] = Query(None, description="Compaction method: rule_based or llm_based")
+):
+    """
+    Manually trigger context compaction for a session.
+
+    Args:
+        session_id: Session to compact
+        method: Compaction method (rule_based/llm_based), defaults to config
+
+    Returns:
+        Compaction result
+
+    Demonstrates:
+    - Manual compaction triggering
+    - Context engineering API
+    - Session event management
+    """
+    try:
+        from ..services.compaction_manager import CompactionManager
+
+        # Get session events
+        reader = get_session_writer()
+        events = reader.read_session(session_id)
+
+        if not events:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Session '{session_id}' not found"
+            )
+
+        # Initialize compaction manager
+        compaction_manager = CompactionManager(session_id)
+
+        # Trigger compaction
+        result = compaction_manager.compact_events(events, method)
+
+        # Write compaction events
+        compaction_manager.write_compaction_event(result)
+
+        logger.info(
+            f"Manual compaction triggered for session={session_id}, "
+            f"method={result.method}, "
+            f"{result.events_before_count} → {result.events_after_count} events"
+        )
+
+        return {
+            "compaction_id": result.compaction_id,
+            "session_id": result.session_id,
+            "method": result.method,
+            "events_before": result.events_before_count,
+            "events_after": result.events_after_count,
+            "tokens_before": result.tokens_before,
+            "tokens_after": result.tokens_after,
+            "compression_ratio": result.compression_ratio,
+            "summary": result.summary_text,
+            "timestamp": datetime.utcnow().isoformat() + "Z"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(
+            f"Failed to trigger compaction for session {session_id}: {e}",
+            exc_info=True
+        )
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to trigger compaction: {str(e)}"
+        )
+
+
+@router.get("/{session_id}/context-lineage")
+async def get_context_lineage(
+    session_id: str,
+    agent_id: Optional[str] = Query(None, description="Filter by agent ID"),
+    limit: int = Query(default=100, ge=1, le=500),
+    offset: int = Query(default=0, ge=0)
+):
+    """
+    Get context compilation lineage for a session.
+
+    Returns detailed information about all context compilations
+    including processor executions, token metrics, and modifications.
+
+    Args:
+        session_id: Session identifier
+        agent_id: Optional filter by agent ID
+        limit: Maximum compilations to return
+        offset: Number of compilations to skip
+
+    Returns:
+        List of context compilations with detailed metrics
+    """
+    try:
+        from ..services.context_lineage_tracker import get_context_lineage_tracker
+
+        lineage_tracker = get_context_lineage_tracker(session_id)
+        compilations = lineage_tracker.list_compilations(
+            agent_id=agent_id,
+            limit=limit,
+            offset=offset
+        )
+
+        return {
+            "session_id": session_id,
+            "compilations": [c.model_dump() for c in compilations],
+            "total_count": len(compilations),
+            "timestamp": datetime.utcnow().isoformat() + "Z"
+        }
+
+    except Exception as e:
+        logger.error(
+            f"Failed to get context lineage for session {session_id}: {e}",
+            exc_info=True
+        )
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get context lineage: {str(e)}"
+        )
+
+
+@router.get("/{session_id}/context-lineage/{compilation_id}")
+async def get_compilation_details(
+    session_id: str,
+    compilation_id: str
+):
+    """
+    Get details for a specific context compilation.
+
+    Args:
+        session_id: Session identifier
+        compilation_id: Compilation identifier
+
+    Returns:
+        Detailed compilation information
+    """
+    try:
+        from ..services.context_lineage_tracker import get_context_lineage_tracker
+
+        lineage_tracker = get_context_lineage_tracker(session_id)
+        compilation = lineage_tracker.get_compilation(compilation_id)
+
+        if not compilation:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Compilation '{compilation_id}' not found"
+            )
+
+        return compilation.model_dump()
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(
+            f"Failed to get compilation {compilation_id}: {e}",
+            exc_info=True
+        )
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get compilation: {str(e)}"
+        )
+
+
+@router.get("/{session_id}/context-stats")
+async def get_context_stats(session_id: str):
+    """
+    Get context compilation statistics for a session.
+
+    Returns aggregate statistics about context compilations:
+    - Total compilations
+    - Agents involved
+    - Average token counts
+    - Truncations/compactions applied
+    - Memories/artifacts loaded
+
+    Args:
+        session_id: Session identifier
+
+    Returns:
+        Context compilation statistics
+    """
+    try:
+        from ..services.context_lineage_tracker import get_context_lineage_tracker
+
+        lineage_tracker = get_context_lineage_tracker(session_id)
+        stats = lineage_tracker.get_compilation_stats()
+
+        return {
+            "session_id": session_id,
+            **stats,
+            "timestamp": datetime.utcnow().isoformat() + "Z"
+        }
+
+    except Exception as e:
+        logger.error(
+            f"Failed to get context stats for session {session_id}: {e}",
+            exc_info=True
+        )
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get context stats: {str(e)}"
+        )
+
+
+@router.get("/{session_id}/token-budget-timeline")
+async def get_token_budget_timeline(session_id: str):
+    """
+    Get token budget timeline for visualization.
+
+    Returns a timeline of token counts before/after compilation,
+    useful for visualizing token usage over time.
+
+    Args:
+        session_id: Session identifier
+
+    Returns:
+        Timeline data for visualization
+    """
+    try:
+        from ..services.context_lineage_tracker import get_context_lineage_tracker
+
+        lineage_tracker = get_context_lineage_tracker(session_id)
+        timeline = lineage_tracker.get_token_budget_timeline()
+
+        return {
+            "session_id": session_id,
+            "timeline": timeline,
+            "timestamp": datetime.utcnow().isoformat() + "Z"
+        }
+
+    except Exception as e:
+        logger.error(
+            f"Failed to get token budget timeline for session {session_id}: {e}",
+            exc_info=True
+        )
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get token budget timeline: {str(e)}"
+        )
+
+
 @router.delete("/{session_id}")
 async def delete_session(session_id: str):
     """
@@ -320,15 +566,32 @@ async def delete_session(session_id: str):
     - Cascading deletion
     """
     try:
+        from ..config import get_config
+
+        storage_root = Path(get_config().storage_path)
+        sessions_root = storage_root / "sessions"
+        artifacts_root = storage_root / "artifacts"
+        compactions_root = storage_root / "compactions"
+
         # Delete session file
-        session_path = Path(f"/storage/sessions/{session_id}.jsonl")
+        session_path = sessions_root / f"{session_id}.jsonl"
         if session_path.exists():
             session_path.unlink()
 
+        # Delete context lineage file
+        lineage_path = sessions_root / f"{session_id}_context_lineage.jsonl"
+        if lineage_path.exists():
+            lineage_path.unlink()
+
         # Delete evidence map artifact
-        artifact_path = Path(f"/storage/artifacts/{session_id}_evidence_map.json")
+        artifact_path = artifacts_root / f"{session_id}_evidence_map.json"
         if artifact_path.exists():
             artifact_path.unlink()
+
+        # Delete compaction archives for this session
+        if compactions_root.exists():
+            for archive_path in compactions_root.glob(f"{session_id}_compaction_*.json"):
+                archive_path.unlink()
 
         logger.info(f"Deleted session: {session_id}")
 

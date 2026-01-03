@@ -68,7 +68,8 @@
       },
       "context_requirements": {
         "requires_prior_outputs": [],
-        "max_context_tokens": 10000
+        "max_context_tokens": 10000,
+        "prefix_caching_eligible": true
       }
     },
     {
@@ -122,7 +123,8 @@
       },
       "context_requirements": {
         "requires_prior_outputs": [],
-        "max_context_tokens": 4000
+        "max_context_tokens": 4000,
+        "prefix_caching_eligible": true
       }
     },
     {
@@ -178,7 +180,8 @@
       },
       "context_requirements": {
         "requires_prior_outputs": ["intake"],
-        "max_context_tokens": 5000
+        "max_context_tokens": 5000,
+        "prefix_caching_eligible": true
       }
     },
     {
@@ -236,7 +239,22 @@
       },
       "context_requirements": {
         "requires_prior_outputs": ["intake", "coverage"],
-        "max_context_tokens": 6000
+        "max_context_tokens": 6000,
+        "budget_allocation_override": {
+          "original_input_percentage": 25,
+          "prior_outputs_percentage": 55,
+          "observations_percentage": 20,
+          "_description": "Fraud agent prioritizes prior outputs (intake/coverage data) over original input"
+        },
+        "context_scope": "scoped",
+        "artifact_access_mode": "on_demand",
+        "memory_enabled": false,
+        "prefix_caching_eligible": true,
+        "conversation_translation": {
+          "enabled": true,
+          "recast_agent_outputs": true,
+          "_description": "Recast prior agent outputs for correct attribution in conversation"
+        }
       }
     },
     {
@@ -284,7 +302,8 @@
       },
       "context_requirements": {
         "requires_prior_outputs": ["intake", "coverage", "fraud"],
-        "max_context_tokens": 5000
+        "max_context_tokens": 5000,
+        "prefix_caching_eligible": true
       }
     },
     {
@@ -339,7 +358,8 @@
       },
       "context_requirements": {
         "requires_prior_outputs": ["intake", "coverage", "fraud", "severity"],
-        "max_context_tokens": 6000
+        "max_context_tokens": 6000,
+        "prefix_caching_eligible": true
       }
     },
     {
@@ -409,7 +429,8 @@
       },
       "context_requirements": {
         "requires_prior_outputs": ["intake", "coverage", "fraud", "severity", "recommendation"],
-        "max_context_tokens": 8000
+        "max_context_tokens": 8000,
+        "prefix_caching_eligible": true
       }
     }
   ]

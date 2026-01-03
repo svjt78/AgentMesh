@@ -1,0 +1,85 @@
+{
+  "version": "1.0.0",
+  "_description": "Defines the ordered pipeline of context processors for compilation",
+  "processors": [
+    {
+      "processor_id": "content_selector",
+      "name": "Content Selection Processor",
+      "enabled": true,
+      "order": 1,
+      "config": {
+        "filter_noise": true,
+        "noise_event_types": [
+          "llm_call_debug",
+          "token_count_debug"
+        ],
+        "relevance_filtering": true
+      },
+      "_description": "Filters noisy events and selects relevant context based on agent requirements"
+    },
+    {
+      "processor_id": "compaction_checker",
+      "name": "Compaction Trigger Processor",
+      "enabled": true,
+      "order": 2,
+      "config": {
+        "check_threshold": true
+      },
+      "_description": "Checks if compaction should be triggered based on thresholds"
+    },
+    {
+      "processor_id": "memory_retriever",
+      "name": "Memory Retrieval Processor",
+      "enabled": false,
+      "order": 3,
+      "config": {
+        "mode": "reactive",
+        "max_memories": 5
+      },
+      "_description": "Retrieves relevant long-term memories for context enrichment"
+    },
+    {
+      "processor_id": "artifact_resolver",
+      "name": "Artifact Resolution Processor",
+      "enabled": true,
+      "order": 4,
+      "config": {
+        "resolve_handles": true,
+        "lazy_loading": true
+      },
+      "_description": "Resolves artifact handles to content or maintains lazy references"
+    },
+    {
+      "processor_id": "transformer",
+      "name": "Transformation Processor",
+      "enabled": true,
+      "order": 5,
+      "config": {
+        "convert_to_messages": true,
+        "ensure_role_correctness": true
+      },
+      "_description": "Transforms structured context into LLM-consumable message format"
+    },
+    {
+      "processor_id": "token_budget_enforcer",
+      "name": "Token Budget Enforcement Processor",
+      "enabled": true,
+      "order": 6,
+      "config": {
+        "enforce_limits": true,
+        "truncation_strategy": "prioritize_recent"
+      },
+      "_description": "Enforces token budget limits and truncates context if needed"
+    },
+    {
+      "processor_id": "injector",
+      "name": "Context Injection Processor",
+      "enabled": true,
+      "order": 7,
+      "config": {
+        "format": "llm_ready"
+      },
+      "_description": "Final formatting and injection of context into LLM-ready format"
+    }
+  ]
+}

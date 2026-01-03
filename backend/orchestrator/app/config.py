@@ -64,6 +64,29 @@ class SchemaSettings(BaseModel):
     max_validation_sample_chars: int = Field(default=500, description="Max chars to log in validation samples")
 
 
+class ContextEngineeringSettings(BaseModel):
+    """Context engineering feature settings."""
+    enabled: bool = Field(default=False, description="Master toggle for context engineering features")
+    processor_pipeline_enabled: bool = Field(default=True, description="Use processor pipeline for context compilation")
+
+
+class CompactionSettings(BaseModel):
+    """Context compaction settings."""
+    enabled: bool = Field(default=False, description="Enable context compaction")
+    method: str = Field(default="rule_based", description="Compaction method: rule_based or llm_based")
+
+
+class MemorySettings(BaseModel):
+    """Memory layer settings."""
+    enabled: bool = Field(default=False, description="Enable long-term memory layer")
+    retrieval_mode: str = Field(default="reactive", description="Memory retrieval mode: reactive or proactive")
+
+
+class ArtifactSettings(BaseModel):
+    """Artifact versioning settings."""
+    versioning_enabled: bool = Field(default=False, description="Enable artifact versioning")
+
+
 class Config(BaseModel):
     """Complete system configuration."""
 
@@ -86,6 +109,12 @@ class Config(BaseModel):
     safety: SafetyThresholds = Field(default_factory=SafetyThresholds)
     schema: SchemaSettings = Field(default_factory=SchemaSettings)
 
+    # Context Engineering
+    context_engineering: ContextEngineeringSettings = Field(default_factory=ContextEngineeringSettings)
+    compaction: CompactionSettings = Field(default_factory=CompactionSettings)
+    memory: MemorySettings = Field(default_factory=MemorySettings)
+    artifacts: ArtifactSettings = Field(default_factory=ArtifactSettings)
+
 
 def _load_system_config() -> Optional[Dict[str, Any]]:
     """
@@ -96,6 +125,7 @@ def _load_system_config() -> Optional[Dict[str, Any]]:
     """
     # Try to find system_config.json in registries/
     config_paths = [
+        Path("/registries/system_config.json"),  # Docker registry volume
         Path("/app/registries/system_config.json"),  # Docker path
         Path("registries/system_config.json"),  # Relative path
         Path("../../../registries/system_config.json"),  # From backend/orchestrator/app
@@ -190,6 +220,29 @@ def load_config() -> Config:
             validation_failure_limit=int(get_value("schema", "validation_failure_limit", "SCHEMA_VALIDATION_FAILURE_LIMIT", "3")),
             log_validation_sample=get_value("schema", "log_validation_sample", "SCHEMA_LOG_VALIDATION_SAMPLE", "true").lower() == "true",
             max_validation_sample_chars=int(get_value("schema", "max_validation_sample_chars", "SCHEMA_MAX_VALIDATION_SAMPLE_CHARS", "500"))
+        ),
+
+        # Context Engineering settings
+        context_engineering=ContextEngineeringSettings(
+            enabled=get_value("context_engineering", "enabled", "CONTEXT_ENGINEERING_ENABLED", "false").lower() == "true",
+            processor_pipeline_enabled=get_value("context_engineering", "processor_pipeline_enabled", "PROCESSOR_PIPELINE_ENABLED", "true").lower() == "true"
+        ),
+
+        # Compaction settings
+        compaction=CompactionSettings(
+            enabled=get_value("compaction", "enabled", "COMPACTION_ENABLED", "false").lower() == "true",
+            method=get_value("compaction", "method", "COMPACTION_METHOD", "rule_based")
+        ),
+
+        # Memory layer settings
+        memory=MemorySettings(
+            enabled=get_value("memory", "enabled", "MEMORY_ENABLED", "false").lower() == "true",
+            retrieval_mode=get_value("memory", "retrieval_mode", "MEMORY_RETRIEVAL_MODE", "reactive")
+        ),
+
+        # Artifact settings
+        artifacts=ArtifactSettings(
+            versioning_enabled=get_value("artifacts", "versioning_enabled", "ARTIFACTS_VERSIONING_ENABLED", "false").lower() == "true"
         )
     )
 

@@ -85,17 +85,19 @@ class AgentReActLoopController:
         session_id: str,
         agent_id: str,
         llm_client: Optional[Any] = None,  # Will be provided in Phase 3
-        tools_client: Optional[Any] = None  # Will be provided in Phase 4
+        tools_client: Optional[Any] = None,  # Will be provided in Phase 4
+        from_agent_id: Optional[str] = None  # Phase 6: Track handoff source for context scoping
     ):
         self.session_id = session_id
         self.agent_id = agent_id
         self.llm_client = llm_client
         self.tools_client = tools_client
+        self.from_agent_id = from_agent_id  # Phase 6: Store for handoff scoping
 
         # Dependencies
         self.registry = get_registry_manager()
         self.governance = create_governance_enforcer(session_id)
-        self.context_compiler = create_context_compiler()
+        self.context_compiler = create_context_compiler(session_id)
         self.storage = get_session_writer()
         self.progress_store = get_progress_store()
 
@@ -250,7 +252,8 @@ class AgentReActLoopController:
             agent_id=self.agent_id,
             original_input=original_input,
             prior_outputs=prior_outputs,
-            observations=self.observations
+            observations=self.observations,
+            from_agent_id=self.from_agent_id  # Phase 6: Pass handoff source for scoping
         )
 
     def _call_llm_for_reasoning(
@@ -571,12 +574,14 @@ def create_agent_react_loop(
     session_id: str,
     agent_id: str,
     llm_client: Optional[Any] = None,
-    tools_client: Optional[Any] = None
+    tools_client: Optional[Any] = None,
+    from_agent_id: Optional[str] = None  # Phase 6: Track handoff source
 ) -> AgentReActLoopController:
     """Factory function to create AgentReActLoopController."""
     return AgentReActLoopController(
         session_id=session_id,
         agent_id=agent_id,
         llm_client=llm_client,
-        tools_client=tools_client
+        tools_client=tools_client,
+        from_agent_id=from_agent_id  # Phase 6: Pass handoff source
     )

@@ -1,27 +1,21 @@
 {
   "version": "1.0.0",
-  "last_updated": "2025-12-29T00:00:00Z",
-  "_comment": "System-wide configuration for AgentMesh execution limits, LLM settings, and safety thresholds. These values override hardcoded defaults in config.py. API keys and service URLs remain in .env for security.",
-
   "orchestrator": {
     "max_iterations": 10,
     "iteration_timeout_seconds": 30,
     "_description": "Meta-agent ReAct loop limits. Controls how many reasoning cycles the orchestrator can perform when coordinating worker agents."
   },
-
   "workflow": {
     "max_duration_seconds": 300,
     "max_agent_invocations": 20,
     "_description": "Session-wide workflow constraints. Hard timeout for entire workflow execution and maximum total agent calls per workflow."
   },
-
   "agent": {
     "default_max_iterations": 5,
     "default_iteration_timeout_seconds": 30,
     "max_duplicate_invocations": 2,
     "_description": "Worker agent ReAct loop defaults. Can be overridden per-agent in agent_registry.json. Controls how many times orchestrator can re-invoke the same agent."
   },
-
   "llm": {
     "timeout_seconds": 30,
     "max_retries": 3,
@@ -29,19 +23,16 @@
     "max_tokens_per_session": 50000,
     "_description": "LLM API interaction limits. Controls timeouts, retry behavior, and token budgets for cost control. Applies to both OpenAI and Anthropic."
   },
-
   "governance": {
     "max_tool_invocations_per_session": 50,
     "max_llm_calls_per_session": 30,
     "_description": "Cross-cutting session-wide governance limits for compliance and cost control. Prevents runaway tool usage and excessive LLM API calls."
   },
-
   "safety": {
     "consecutive_no_progress_limit": 2,
     "malformed_response_limit": 3,
     "_description": "Error recovery and circuit breaker mechanisms. Terminates agents stuck in loops or producing invalid outputs."
   },
-
   "schema": {
     "default_version": "1.0",
     "strict_validation": true,
@@ -49,5 +40,13 @@
     "log_validation_sample": true,
     "max_validation_sample_chars": 500,
     "_description": "Schema validation settings. Controls strictness, logging, and failure thresholds for agent output validation."
-  }
+  },
+  "context_engineering": {
+    "enabled": true,
+    "processor_pipeline_enabled": true
+  },
+  "compaction": {},
+  "memory": {},
+  "artifacts": {},
+  "last_updated": "2026-01-03T02:37:32.554964Z"
 }

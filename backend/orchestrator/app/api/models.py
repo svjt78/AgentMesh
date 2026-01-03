@@ -318,6 +318,10 @@ class SystemConfigResponse(BaseModel):
     governance: Dict[str, Any]
     safety: Dict[str, Any]
     schema: Optional[Dict[str, Any]] = {}
+    context_engineering: Optional[Dict[str, Any]] = {}
+    compaction: Optional[Dict[str, Any]] = {}
+    memory: Optional[Dict[str, Any]] = {}
+    artifacts: Optional[Dict[str, Any]] = {}
 
 
 class SystemConfigUpdateRequest(BaseModel):
@@ -330,6 +334,10 @@ class SystemConfigUpdateRequest(BaseModel):
     governance: Dict[str, Any] = Field(..., description="Governance session limits")
     safety: Dict[str, Any] = Field(..., description="Safety thresholds")
     schema: Optional[Dict[str, Any]] = Field(default={}, description="Schema validation settings")
+    context_engineering: Optional[Dict[str, Any]] = Field(default={}, description="Context engineering settings")
+    compaction: Optional[Dict[str, Any]] = Field(default={}, description="Compaction settings")
+    memory: Optional[Dict[str, Any]] = Field(default={}, description="Memory settings")
+    artifacts: Optional[Dict[str, Any]] = Field(default={}, description="Artifact settings")
 
 
 # ----- Generic Operation Response -----

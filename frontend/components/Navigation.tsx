@@ -10,6 +10,8 @@ export default function Navigation() {
     { href: '/', label: 'Home' },
     { href: '/run-claim', label: 'Run Claim' },
     { href: '/replay', label: 'Replay' },
+    { href: '/memory', label: 'Memory' },
+    { href: '/artifacts', label: 'Artifacts' },
     { href: '/evidence', label: 'Evidence' },
     { href: '/hitl', label: 'Interventions' },
     { href: '/config', label: 'Configuration' },

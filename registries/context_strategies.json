@@ -1,0 +1,86 @@
+{
+  "version": "1.0.0",
+  "_description": "Central configuration for context engineering features in AgentMesh",
+  "context_compilation": {
+    "default_budget_allocation": {
+      "original_input_percentage": 30,
+      "prior_outputs_percentage": 50,
+      "observations_percentage": 20,
+      "_description": "Default token budget allocation across context components"
+    },
+    "enable_token_counting": true,
+    "tokenizer": "tiktoken",
+    "_description": "Core context compilation settings"
+  },
+  "compaction": {
+    "enabled": false,
+    "trigger_strategy": "token_threshold",
+    "token_threshold": 8000,
+    "event_count_threshold": 100,
+    "compaction_method": "rule_based",
+    "llm_summarization": {
+      "enabled": false,
+      "model_profile_id": "summarization_gpt35",
+      "quality_level": "standard",
+      "preserve_critical_events": true,
+      "_description": "LLM-based summarization configuration"
+    },
+    "sliding_window": {
+      "enabled": true,
+      "overlap_percentage": 10,
+      "_description": "Sliding window with overlap to preserve continuity"
+    },
+    "retention_policy": {
+      "keep_recent_events": 20,
+      "keep_critical_event_types": [
+        "agent_invocation_completed",
+        "workflow_completed",
+        "checkpoint_created",
+        "checkpoint_resolved"
+      ],
+      "_description": "Events to preserve during compaction"
+    },
+    "_description": "Context compaction settings for session event summarization"
+  },
+  "memory_layer": {
+    "enabled": false,
+    "storage_path": "storage/memory",
+    "retention_days": 90,
+    "retrieval_mode": "reactive",
+    "proactive_preload": {
+      "enabled": false,
+      "similarity_threshold": 0.7,
+      "max_memories_per_context": 5,
+      "_description": "Proactive memory preloading via similarity search"
+    },
+    "indexing": {
+      "enabled": false,
+      "strategy": "keyword_based",
+      "_description": "Memory indexing for faster retrieval"
+    },
+    "_description": "Long-term memory layer configuration beyond session scope"
+  },
+  "artifact_management": {
+    "versioning_enabled": false,
+    "max_versions_per_artifact": 10,
+    "auto_externalize_threshold_kb": 100,
+    "storage_path": "storage/artifacts",
+    "handle_format": "artifact://{artifact_id}/v{version}",
+    "_description": "Artifact externalization and versioning configuration"
+  },
+  "prefix_caching": {
+    "enabled": true,
+    "stable_prefix_components": [
+      "system_instructions",
+      "agent_identity",
+      "tool_definitions",
+      "compaction_summaries"
+    ],
+    "variable_suffix_components": [
+      "recent_observations",
+      "current_task",
+      "tool_outputs"
+    ],
+    "_description": "Prefix caching for LLM cost optimization"
+  }
+}

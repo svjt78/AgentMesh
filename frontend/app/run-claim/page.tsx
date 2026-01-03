@@ -64,7 +64,7 @@ export default function RunClaimPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
-      <h1 className="text-3xl font-bold mb-8">Run Claim Triage</h1>
+      <h1 className="text-3xl font-bold mb-8">Run Workflow</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Left: Claim Form */}

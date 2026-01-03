@@ -30,6 +30,8 @@ class LLMResponse(BaseModel):
     tokens_used: Dict[str, int]  # {"prompt": X, "completion": Y, "total": Z}
     latency_ms: int
     finish_reason: str
+    # Phase 7: Cache metrics
+    cache_metrics: Optional[Dict[str, Any]] = None  # {"cache_hit": bool, "cache_read_tokens": int, "cache_creation_tokens": int}
 
 
 class BaseLLMClient(ABC):
@@ -101,6 +103,10 @@ class BaseLLMClient(ABC):
                 "latency_ms": response.latency_ms,
                 "finish_reason": response.finish_reason
             })
+
+            # Phase 7: Include cache metrics if available
+            if response.cache_metrics:
+                event["cache_metrics"] = response.cache_metrics
 
         self.storage.write_event(self.session_id, event)
 
@@ -242,6 +248,7 @@ class ClaudeClient(BaseLLMClient):
         Call Anthropic API with retry logic.
 
         Note: Claude doesn't have native JSON mode, so we use prompt engineering.
+        Phase 7: Supports prompt caching via cache_control parameter.
         """
         retry_policy = self.model_profile.retry_policy
         max_retries = retry_policy.get("max_retries", 3)
@@ -256,17 +263,26 @@ class ClaudeClient(BaseLLMClient):
 
                 # Claude API expects system message separate from messages
                 system_message = None
+                system_cache_control = None
                 chat_messages = []
 
                 for msg in messages:
                     if msg["role"] == "system":
                         # Extract system message (Claude expects it separate)
                         system_message = msg["content"]
+                        # Phase 7: Extract cache_control if present
+                        if "cache_control" in msg:
+                            system_cache_control = msg["cache_control"]
                     else:
-                        chat_messages.append({
+                        # Regular message
+                        message_dict = {
                             "role": msg["role"],
                             "content": msg["content"]
-                        })
+                        }
+                        # Phase 7: Add cache_control if present
+                        if "cache_control" in msg:
+                            message_dict["cache_control"] = msg["cache_control"]
+                        chat_messages.append(message_dict)
 
                 # Build request parameters
                 request_params = {
@@ -280,7 +296,17 @@ class ClaudeClient(BaseLLMClient):
 
                 # Add system message if present
                 if system_message:
-                    request_params["system"] = system_message
+                    # Phase 7: Support cache_control for system message
+                    if system_cache_control:
+                        request_params["system"] = [
+                            {
+                                "type": "text",
+                                "text": system_message,
+                                "cache_control": system_cache_control
+                            }
+                        ]
+                    else:
+                        request_params["system"] = system_message
 
                 # Override with any kwargs
                 request_params.update(kwargs)
@@ -290,6 +316,37 @@ class ClaudeClient(BaseLLMClient):
 
                 latency_ms = int((time.time() - start_time) * 1000)
 
+                # Phase 7: Extract cache metrics from response
+                cache_metrics = None
+                cache_creation_tokens = getattr(response.usage, 'cache_creation_input_tokens', 0)
+                cache_read_tokens = getattr(response.usage, 'cache_read_input_tokens', 0)
+
+                if cache_creation_tokens > 0 or cache_read_tokens > 0:
+                    # Cache was used
+                    cache_hit = cache_read_tokens > 0
+
+                    # Calculate cost savings (Anthropic pricing)
+                    # Regular input: $3.00/M, Cache write: $3.75/M, Cache read: $0.30/M
+                    regular_cost_per_token = 3.00 / 1_000_000
+                    cache_read_cost_per_token = 0.30 / 1_000_000
+
+                    if cache_hit:
+                        # Savings from using cache instead of regular tokens
+                        savings_tokens = cache_read_tokens
+                        savings_cost = savings_tokens * (regular_cost_per_token - cache_read_cost_per_token)
+                    else:
+                        savings_tokens = 0
+                        savings_cost = 0.0
+
+                    cache_metrics = {
+                        "cache_enabled": True,
+                        "cache_hit": cache_hit,
+                        "cache_creation_input_tokens": cache_creation_tokens,
+                        "cache_read_input_tokens": cache_read_tokens,
+                        "cache_savings_tokens": savings_tokens,
+                        "cache_savings_cost_usd": round(savings_cost, 6)
+                    }
+
                 # Extract response
                 llm_response = LLMResponse(
                     content=response.content[0].text,
@@ -298,17 +355,21 @@ class ClaudeClient(BaseLLMClient):
                     tokens_used={
                         "prompt": response.usage.input_tokens,
                         "completion": response.usage.output_tokens,
-                        "total": response.usage.input_tokens + response.usage.output_tokens
+                        "total": response.usage.input_tokens + response.usage.output_tokens,
+                        # Phase 7: Add cache token counts
+                        "cache_creation_input_tokens": cache_creation_tokens,
+                        "cache_read_input_tokens": cache_read_tokens
                     },
                     latency_ms=latency_ms,
-                    finish_reason=response.stop_reason
+                    finish_reason=response.stop_reason,
+                    cache_metrics=cache_metrics  # Phase 7: Include cache metrics
                 )
 
                 # Update metrics
                 self.total_calls += 1
                 self.total_tokens += llm_response.tokens_used["total"]
 
-                # Log success
+                # Log success (will include cache_metrics in event)
                 self._log_llm_call(messages, llm_response, attempt=attempt)
 
                 return llm_response
