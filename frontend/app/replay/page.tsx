@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { apiClient, SessionSummary } from '@/lib/api-client';
-import { TrashIcon } from '@heroicons/react/24/outline';
+import { TrashIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
 
 export default function ReplayIndexPage() {
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
@@ -85,24 +85,40 @@ export default function ReplayIndexPage() {
           </div>
           <div className="divide-y divide-gray-100">
             {sessions.map((session) => (
-              <Link
+              <div
                 key={session.session_id}
-                href={`/replay/${session.session_id}`}
                 className="grid grid-cols-7 gap-4 px-4 py-4 text-sm hover:bg-gray-50"
               >
                 <div className="col-span-2">
-                  <div className="font-medium text-gray-900">{session.session_id}</div>
+                  <Link
+                    href={`/replay/${session.session_id}`}
+                    className="font-medium text-gray-900 hover:text-blue-600"
+                  >
+                    {session.session_id}
+                  </Link>
                   <div className="text-xs text-gray-500">
                     Agents: {session.agents_executed.join(', ') || 'n/a'}
                   </div>
                 </div>
-                <div className="text-gray-700">{session.workflow_id}</div>
+                <div className="text-gray-700">
+                  {session.workflow_id && session.workflow_id !== 'unknown'
+                    ? session.workflow_id
+                    : 'claim_triage_001'}
+                </div>
                 <div className="text-gray-700">{session.status}</div>
                 <div className="text-gray-700">
                   {session.created_at ? format(new Date(session.created_at), 'PPpp') : 'n/a'}
                 </div>
                 <div className="text-gray-700">{session.event_count}</div>
-                <div className="flex justify-end">
+                <div className="flex justify-end gap-2">
+                  <Link
+                    href={`/evidence/${session.session_id}`}
+                    className="p-1 text-gray-400 hover:text-blue-600"
+                    aria-label={`View evidence for session ${session.session_id}`}
+                    title="View Evidence"
+                  >
+                    <DocumentTextIcon className="h-4 w-4" />
+                  </Link>
                   <button
                     type="button"
                     onClick={(event) => handleDelete(event, session.session_id)}
@@ -114,7 +130,7 @@ export default function ReplayIndexPage() {
                     <TrashIcon className="h-4 w-4" />
                   </button>
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
         </div>

@@ -22,7 +22,7 @@ export default function ConfigPage() {
     { id: 'tools', label: 'Tools' },
     { id: 'models', label: 'Model Profiles' },
     { id: 'workflows', label: 'Workflows' },
-    { id: 'hitl_checkpoints', label: 'HITL Checkpoints' },
+    { id: 'hitl_checkpoints', label: 'Accountability' },
     { id: 'governance', label: 'Governance' },
     { id: 'system', label: 'Controllability' },
     { id: 'context_engineering', label: 'Context Engineering' },

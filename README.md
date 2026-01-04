@@ -39,7 +39,8 @@ AgentMesh is a **production-ready multi-agent orchestration platform** specifica
 2. **Governance**: How do you enforce policies and limits in autonomous agent systems?
 3. **Observability**: How do you track and replay complex multi-agent decision chains?
 4. **Scalability**: How do you design agent systems that can scale horizontally?
-5. **Explainability**: How do you generate audit trails for AI-driven decisions in regulated industries?
+5. **Explainability**: How do you generate transparent, auditable evidence maps for AI-driven decisions in regulated industries?
+6. **Human-in-the-Loop Accountability**: How do you integrate human oversight with audit trails for critical decision points?
 
 ### Key Innovations
 
@@ -94,11 +95,17 @@ AgentMesh is a **production-ready multi-agent orchestration platform** specifica
 ### ✅ **Executive UI**
 - Next.js frontend with live progress monitoring
 - Real-time SSE event streaming
-- Session replay capabilities
-- Evidence map visualization
-- Human-in-the-Loop (HITL) dashboard for checkpoint management
-- Configuration management UI for registry editing
-- Interactive workflow diagram visualization (ReactFlow)
+- **Multi-tab Observability Interface**:
+  - **Event Timeline**: Complete session event replay with filtering
+  - **Token Analytics**: Context compilation statistics and token budget visualization
+  - **Explainability**: Evidence-based decision explanation with 6 key sections
+- Evidence map visualization with decision rationale, confidence scores, and financial metrics
+- Human interventions audit trail with complete accountability
+- Accountability (HITL checkpoints) configuration and dashboard
+- Configuration management UI for registry editing (including Context Engineering tab)
+- Interactive workflow diagram visualization with human touchpoint nodes (ReactFlow)
+- Contextual help tooltips throughout the interface
+- Session management with listing, filtering, and deletion
 - Responsive design with Tailwind CSS
 
 ---
@@ -225,13 +232,19 @@ docker compose logs -f orchestrator
 
 - **Frontend Home**: http://localhost:3016
 - **Run Workflow**: http://localhost:3016/run-claim
-- **Session Replay**: http://localhost:3016/replay
-- **Replay Detail**: http://localhost:3016/replay/{session_id}
-- **Evidence Map**: http://localhost:3016/evidence
+- **Observability (Sessions List)**: http://localhost:3016/replay
+- **Observability Detail (Multi-tab Interface)**: http://localhost:3016/replay/{session_id}
+  - Event Timeline tab - Complete session event replay
+  - Token Analytics tab - Context compilation and token budgets
+  - Explainability tab - Evidence-based decision explanation
 - **Memory Browser**: http://localhost:3016/memory
 - **Artifact Versions**: http://localhost:3016/artifacts
-- **HITL Dashboard**: http://localhost:3016/hitl
+- **Interventions (HITL) Dashboard**: http://localhost:3016/hitl
 - **Configuration UI**: http://localhost:3016/config
+  - Agents, Tools, Models, Workflows tabs
+  - Governance Policies, System Config tabs
+  - Accountability (HITL) tab
+  - **Context Engineering tab** - Configure context strategies and processor pipeline
 - **API Documentation**: http://localhost:8016/docs
 - **API Health**: http://localhost:8016/health
 
@@ -361,18 +374,37 @@ AgentMesh/
 ├── frontend/                   # Next.js UI
 │   ├── app/
 │   │   ├── run-claim/          # Submit claim page
-│   │   ├── replay/             # Session replay page
-│   │   ├── evidence/           # Evidence map page
+│   │   ├── replay/             # Observability interface
+│   │   │   ├── page.tsx        # Sessions list/index page
+│   │   │   └── [sessionId]/    # Multi-tab session detail
+│   │   │       └── page.tsx    # Event Timeline, Token Analytics, Explainability tabs
+│   │   ├── memory/             # Memory browser page
+│   │   ├── artifacts/          # Artifact versions page
 │   │   ├── hitl/               # Human-in-the-Loop dashboard
 │   │   ├── config/             # Configuration management UI
+│   │   │   └── page.tsx        # Multi-tab config (Agents, Tools, Context Engineering, etc.)
 │   │   └── layout.tsx
 │   ├── components/
-│   │   ├── Navigation.tsx      # Navigation component
-│   │   └── config/             # Config UI components
+│   │   ├── Navigation.tsx      # Navigation component (updated labels)
+│   │   ├── InfoTooltip.tsx     # Contextual help tooltips (NEW)
+│   │   ├── config/             # Config UI components
+│   │   │   ├── ContextEngineeringTab.tsx  # Context strategies config (NEW)
+│   │   │   └── workflow-diagram/
+│   │   │       ├── WorkflowDiagram.tsx    # Workflow visualization
+│   │   │       ├── NodeDetailsPanel.tsx   # Node details view
+│   │   │       ├── DiagramControls.tsx    # Diagram filters
+│   │   │       ├── types.ts              # TypeScript types
+│   │   │       └── nodes/
+│   │   │           └── HumanTouchpointNode.tsx  # Human approval node (NEW)
+│   │   └── visualization/      # Data visualization components
+│   │       ├── ContextTimeline.tsx        # Context compilation timeline (NEW)
+│   │       ├── TokenBudgetChart.tsx       # Token usage chart (NEW)
+│   │       └── ContextLineageTree.tsx     # Processor execution tree (NEW)
 │   ├── hooks/
 │   │   └── use-sse.ts          # SSE subscription hook
 │   ├── lib/
 │   │   ├── api-client.ts       # API client utility
+│   │   ├── demo-evidence.ts    # Demo evidence map data (NEW)
 │   │   └── diagram/            # Workflow diagram utilities
 │   ├── Dockerfile
 │   ├── package.json
@@ -405,6 +437,7 @@ AgentMesh/
 ├── CLAUDE.md                   # Claude Code development guidelines
 ├── DECISIONS.md                # Architectural decisions
 ├── IMPLEMENTATION_PROGRESS.md  # Development progress
+├── EXPLAINABILITY_TAB_DOCUMENTATION.md  # Explainability interface guide (NEW)
 ├── HUMAN_IN_THE_LOOP.md        # HITL feature documentation
 ├── CONFIGURATION.md            # Configuration management guide
 ├── AGENTS.md                   # Agent design documentation
@@ -644,19 +677,60 @@ GET /sessions/{session_id}
 
 ### Viewing Results
 
-#### Evidence Map
+#### Evidence Map (Explainability Tab)
 
+The Explainability tab in the Observability interface provides comprehensive, transparent documentation of how the system arrived at its decision.
+
+**Access via UI**: http://localhost:3016/replay/{session_id} → Explainability tab
+
+**Access via API**:
 ```bash
 GET /sessions/{session_id}/evidence
 ```
 
-Returns structured evidence map with:
-- **Decision**: Final recommendation with confidence
-- **Supporting Evidence**: All evidence sources
-- **Assumptions**: Key assumptions made
-- **Limitations**: Known limitations
-- **Agent Chain**: Ordered list of agents executed
-- **Alternative Outcomes**: Outcomes considered
+Returns structured evidence map with **6 key sections**:
+
+1. **Decision**
+   - Final outcome (APPROVE_CLAIM, DENY_CLAIM, REQUIRES_MANUAL_REVIEW)
+   - Confidence score (0-100%) with visual progress bar
+   - Decision rationale (comprehensive explanation)
+   - Financial exposure and potential savings
+
+2. **Supporting Evidence**
+   - Agent-by-agent findings with detailed analysis
+   - Evidence weights (relative importance 0-100%)
+   - Fraud risk scores when applicable
+   - Source traceability for each piece of evidence
+
+3. **Human Interventions**
+   - Complete audit trail of human touchpoints
+   - Intervention type, timestamp, reviewer details
+   - Actions taken and decision impact
+   - Comments and observations
+
+4. **Agent Execution Chain**
+   - Visual sequence of agents invoked
+   - Execution order and flow
+   - Agent capabilities utilized
+
+5. **Assumptions**
+   - Key assumptions underlying the decision
+   - Dependencies that could affect outcome
+   - Data quality and completeness assumptions
+
+6. **Limitations**
+   - Acknowledged constraints and data gaps
+   - Known uncertainties in the analysis
+   - Areas requiring human judgment
+
+**Strategic Value**:
+- Regulatory compliance and audit trails
+- Customer communication (denial explanations)
+- SIU investigation support
+- Quality assurance and continuous improvement
+- Legal defensibility
+
+**See**: [EXPLAINABILITY_TAB_DOCUMENTATION.md](EXPLAINABILITY_TAB_DOCUMENTATION.md) for complete user guide
 
 #### Session Details
 
@@ -786,6 +860,7 @@ http://localhost:3016/config
 - Live preview of configuration changes
 - Export/import configurations
 - Syntax highlighting and error detection
+- Accountability tab for HITL checkpoint configuration
 
 **Note**: Configuration changes require service restart to take effect.
 
@@ -816,18 +891,32 @@ The frontend is built with modern React and Next.js patterns:
 frontend/
 ├── app/                      # Next.js App Router pages
 │   ├── run-claim/           # Claim submission UI
-│   ├── replay/              # Session timeline replay
-│   ├── evidence/            # Evidence map visualization
+│   ├── replay/              # Observability interface
+│   │   ├── page.tsx        # Sessions list with management
+│   │   └── [sessionId]/    # Multi-tab session detail view
+│   ├── memory/              # Memory browser
+│   ├── artifacts/           # Artifact versions browser
 │   ├── hitl/                # HITL checkpoint dashboard
-│   ├── config/              # Registry configuration editor
+│   ├── config/              # Registry configuration editor (8 tabs)
 │   └── layout.tsx           # Root layout with navigation
 ├── components/              # Reusable React components
-│   ├── Navigation.tsx       # Main navigation bar
-│   └── config/              # Configuration UI components
+│   ├── Navigation.tsx       # Main navigation bar (updated labels)
+│   ├── InfoTooltip.tsx      # Contextual help tooltips (NEW)
+│   ├── config/              # Configuration UI components
+│   │   ├── ContextEngineeringTab.tsx  # Context strategies (NEW)
+│   │   └── workflow-diagram/
+│   │       ├── nodes/
+│   │       │   └── HumanTouchpointNode.tsx  # Human approval nodes (NEW)
+│   │       └── ...
+│   └── visualization/       # Data visualization components (NEW)
+│       ├── ContextTimeline.tsx        # Context compilation timeline
+│       ├── TokenBudgetChart.tsx       # Token usage charts
+│       └── ContextLineageTree.tsx     # Processor execution tree
 ├── hooks/                   # Custom React hooks
 │   └── use-sse.ts          # Server-Sent Events subscription
 ├── lib/                     # Utilities and helpers
 │   ├── api-client.ts       # API client with fetch wrappers
+│   ├── demo-evidence.ts    # Demo evidence map data (NEW)
 │   └── diagram/            # Workflow diagram utilities
 └── public/                  # Static assets
 ```
@@ -1496,13 +1585,37 @@ Response 200:
 }
 ```
 
-#### Context Engineering (Session)
+#### Observability & Context Engineering
 
+**Session Management**:
+```http
+GET /sessions?limit=20&offset=0
+# List all sessions with pagination
+
+DELETE /sessions/{session_id}
+# Delete a session and its associated data
+```
+
+**Context Engineering (Session)**:
 ```http
 GET /sessions/{session_id}/context-lineage
+# Get complete context compilation history
+
 GET /sessions/{session_id}/context-stats
+# Get context compilation statistics (for Token Analytics tab)
+
 GET /sessions/{session_id}/token-budget-timeline
+# Get token usage timeline data
+
 POST /sessions/{session_id}/trigger-compaction
+# Manually trigger session compaction/summarization
+```
+
+**Evidence & Explainability**:
+```http
+GET /sessions/{session_id}/evidence
+# Get complete evidence map for Explainability tab
+# Returns 6-section decision explanation
 ```
 
 #### Health Check
@@ -2040,6 +2153,7 @@ Comprehensive documentation is available in the project:
 - **[CLAUDE.md](CLAUDE.md)** - Development guidelines for Claude Code
 - **[DECISIONS.md](DECISIONS.md)** - Architectural decisions and rationale
 - **[IMPLEMENTATION_PROGRESS.md](IMPLEMENTATION_PROGRESS.md)** - Detailed implementation status
+- **[EXPLAINABILITY_TAB_DOCUMENTATION.md](EXPLAINABILITY_TAB_DOCUMENTATION.md)** - Explainability interface user guide (NEW)
 - **[HUMAN_IN_THE_LOOP.md](HUMAN_IN_THE_LOOP.md)** - HITL feature design and usage
 - **[CONFIGURATION.md](CONFIGURATION.md)** - Configuration management guide
 - **[AGENTS.md](AGENTS.md)** - Agent design patterns and best practices
@@ -2061,11 +2175,17 @@ Comprehensive documentation is available in the project:
 2. Read [IMPLEMENTATION_PROGRESS.md](IMPLEMENTATION_PROGRESS.md) for system overview
 3. Review [AGENTS.md](AGENTS.md) to understand agent patterns
 4. Explore [HUMAN_IN_THE_LOOP.md](HUMAN_IN_THE_LOOP.md) for HITL features
+5. Study [EXPLAINABILITY_TAB_DOCUMENTATION.md](EXPLAINABILITY_TAB_DOCUMENTATION.md) for evidence-based decision transparency
 
 **Development**:
 1. Check [CLAUDE.md](CLAUDE.md) for development workflows
 2. Review [CONFIGURATION.md](CONFIGURATION.md) for config management
 3. See [REGISTRY_MANAGEMENT_PLAN.md](REGISTRY_MANAGEMENT_PLAN.md) for registry patterns
+
+**User Interface**:
+1. Refer to [EXPLAINABILITY_TAB_DOCUMENTATION.md](EXPLAINABILITY_TAB_DOCUMENTATION.md) for complete UI guide
+2. All field-level explanations available via InfoTooltip components (ℹ️ icons)
+3. Context Engineering documentation in `docs/` folder
 
 ---
 

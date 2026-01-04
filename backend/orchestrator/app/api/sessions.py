@@ -241,14 +241,30 @@ async def get_evidence_map(session_id: str):
     artifact_id = f"{session_id}_evidence_map"
 
     try:
-        artifact = artifact_reader.read_artifact(artifact_id)
+        # load_artifact returns just the data field, not the full artifact structure
+        evidence_data = artifact_reader.load_artifact(artifact_id)
+
+        if evidence_data is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Evidence map not found for session '{session_id}'"
+            )
+
+        # Read the full artifact file to get metadata
+        from pathlib import Path
+        import json
+        artifact_file = Path(artifact_reader.artifacts_path) / f"{artifact_id}.json"
+        with open(artifact_file, "r") as f:
+            full_artifact = json.load(f)
 
         return EvidenceMapResponse(
             session_id=session_id,
-            evidence_map=artifact["data"],
-            generated_at=artifact["created_at"]
+            evidence_map=evidence_data,
+            generated_at=full_artifact.get("created_at", datetime.utcnow().isoformat() + "Z")
         )
 
+    except HTTPException:
+        raise
     except FileNotFoundError:
         raise HTTPException(
             status_code=404,

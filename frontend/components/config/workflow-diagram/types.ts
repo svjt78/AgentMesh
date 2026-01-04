@@ -32,11 +32,21 @@ export interface ToolData {
   endpoint: string;
 }
 
+export interface HumanTouchpointData {
+  touchpointId: string;
+  name: string;
+  description: string;
+  afterStep: string;
+  beforeStep: string;
+  triggerCondition?: string;
+  approverRole?: string;
+}
+
 // Extended node types
 
 export interface DiagramNode extends Node {
-  type: 'orchestrator' | 'agent' | 'tool';
-  data: OrchestratorData | AgentData | ToolData;
+  type: 'orchestrator' | 'agent' | 'tool' | 'humanTouchpoint';
+  data: OrchestratorData | AgentData | ToolData | HumanTouchpointData;
 }
 
 // Edge data types
@@ -60,6 +70,7 @@ export interface DiagramFilters {
   showDependencies: boolean;
   showToolEdges: boolean;
   showGovernance: boolean;
+  showHumanTouchpoints: boolean;
 }
 
 // Graph structure
@@ -81,4 +92,8 @@ export function isAgentData(data: any): data is AgentData {
 
 export function isToolData(data: any): data is ToolData {
   return 'toolId' in data && 'endpoint' in data;
+}
+
+export function isHumanTouchpointData(data: any): data is HumanTouchpointData {
+  return 'touchpointId' in data && 'afterStep' in data;
 }

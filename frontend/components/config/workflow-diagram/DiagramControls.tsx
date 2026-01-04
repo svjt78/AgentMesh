@@ -71,6 +71,17 @@ export default function DiagramControls({ filters, onFilterChange }: DiagramCont
           <span className="text-sm text-gray-700">Governance Constraints</span>
           <span className="ml-auto w-3 h-3 rounded-full bg-red-600"></span>
         </label>
+
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={filters.showHumanTouchpoints}
+            onChange={() => handleToggle('showHumanTouchpoints')}
+            className="rounded text-amber-600 focus:ring-amber-500"
+          />
+          <span className="text-sm text-gray-700">Human Touchpoints</span>
+          <span className="ml-auto w-3 h-3 rounded-full bg-amber-500"></span>
+        </label>
       </div>
 
       {/* Legend */}
@@ -116,6 +127,11 @@ export default function DiagramControls({ filters, onFilterChange }: DiagramCont
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 rounded bg-gray-400"></div>
             <span className="text-gray-700">Tool</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded bg-gradient-to-br from-amber-500 to-orange-600"></div>
+            <span className="text-gray-700">Human Touchpoint</span>
           </div>
         </div>
       </div>

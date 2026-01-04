@@ -6,15 +6,17 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { apiClient, SessionDetails } from '@/lib/api-client';
+import { apiClient, SessionDetails, EvidenceMap } from '@/lib/api-client';
 import { format } from 'date-fns';
 import Link from 'next/link';
 
 import ContextTimeline from '@/components/visualization/ContextTimeline';
 import TokenBudgetChart from '@/components/visualization/TokenBudgetChart';
 import ContextLineageTree from '@/components/visualization/ContextLineageTree';
+import InfoTooltip from '@/components/InfoTooltip';
+import { DEMO_EVIDENCE_MAP, FIELD_EXPLANATIONS } from '@/lib/demo-evidence';
 
-type TabName = 'events' | 'context_engineering';
+type TabName = 'events' | 'token_analytics' | 'explainability';
 
 export default function ReplayPage() {
   const params = useParams();
@@ -29,13 +31,16 @@ export default function ReplayPage() {
   const [contextStatsError, setContextStatsError] = useState<string | null>(null);
   const [loadingContextStats, setLoadingContextStats] = useState(false);
   const [triggeringCompaction, setTriggeringCompaction] = useState(false);
+  const [evidenceMap, setEvidenceMap] = useState<EvidenceMap | null>(null);
+  const [evidenceError, setEvidenceError] = useState<string | null>(null);
+  const [loadingEvidence, setLoadingEvidence] = useState(false);
 
   useEffect(() => {
     loadSession();
   }, [sessionId]);
 
   useEffect(() => {
-    if (activeTab !== 'context_engineering') return;
+    if (activeTab !== 'token_analytics') return;
 
     const loadStats = async () => {
       try {
@@ -51,6 +56,25 @@ export default function ReplayPage() {
     };
 
     loadStats();
+  }, [activeTab, sessionId]);
+
+  useEffect(() => {
+    if (activeTab !== 'explainability') return;
+
+    const loadEvidence = async () => {
+      try {
+        setLoadingEvidence(true);
+        const data = await apiClient.getEvidenceMap(sessionId);
+        setEvidenceMap(data);
+        setEvidenceError(null);
+      } catch (err: any) {
+        setEvidenceError(err.message || 'Failed to load evidence map');
+      } finally {
+        setLoadingEvidence(false);
+      }
+    };
+
+    loadEvidence();
   }, [activeTab, sessionId]);
 
   const loadSession = async () => {
@@ -88,7 +112,8 @@ export default function ReplayPage() {
 
   const tabs = [
     { id: 'events' as TabName, label: 'Event Timeline' },
-    { id: 'context_engineering' as TabName, label: 'Context Engineering' },
+    { id: 'token_analytics' as TabName, label: 'Token Analytics' },
+    { id: 'explainability' as TabName, label: 'Explainability' },
   ];
 
   return (
@@ -195,12 +220,12 @@ export default function ReplayPage() {
         </>
       )}
 
-      {activeTab === 'context_engineering' && (
+      {activeTab === 'token_analytics' && (
         <div className="space-y-6">
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h2 className="text-lg font-semibold">Context Engineering Ops</h2>
+                <h2 className="text-lg font-semibold">Token Analytics Ops</h2>
                 <p className="text-sm text-gray-600">
                   Trigger compaction and review context compilation stats for this session.
                 </p>
@@ -270,6 +295,215 @@ export default function ReplayPage() {
           <ContextLineageTree sessionId={sessionId} />
         </div>
       )}
+
+      {activeTab === 'explainability' && (() => {
+        // Check if evidence is minimal/empty and use demo data as fallback
+        const isMinimalEvidence = evidenceMap && (
+          evidenceMap.evidence_map.partial ||
+          evidenceMap.evidence_map.no_output ||
+          !evidenceMap.evidence_map.decision?.outcome ||
+          evidenceMap.evidence_map.decision?.outcome === 'N/A' ||
+          (!evidenceMap.evidence_map.supporting_evidence || evidenceMap.evidence_map.supporting_evidence.length === 0)
+        );
+
+        const displayEvidence = (isMinimalEvidence || !evidenceMap) ? DEMO_EVIDENCE_MAP : evidenceMap.evidence_map;
+        const isDemo = (isMinimalEvidence || !evidenceMap);
+
+        return (
+          <div className="space-y-6">
+            {loadingEvidence && (
+              <div className="bg-white rounded-lg shadow p-6">
+                Loading evidence map...
+              </div>
+            )}
+
+            {evidenceError && (
+              <div className="bg-white rounded-lg shadow p-6 text-red-600">
+                Error loading evidence: {evidenceError}
+              </div>
+            )}
+
+            {!loadingEvidence && !evidenceError && (
+              <>
+                {/* Decision */}
+                <div className="bg-white rounded-lg shadow p-6">
+                  <h2 className="text-2xl font-semibold mb-4">
+                    <InfoTooltip {...FIELD_EXPLANATIONS.outcome} />
+                  </h2>
+                  <div className="space-y-3">
+                    <div>
+                      <span className="font-medium">Outcome:</span>
+                      <br />
+                      <span className="text-xl font-bold text-gray-900">{displayEvidence.decision?.outcome || 'N/A'}</span>
+                    </div>
+                    {displayEvidence.decision?.confidence && (
+                      <div>
+                        <InfoTooltip {...FIELD_EXPLANATIONS.confidence} />
+                        <br />
+                        <div className="w-full bg-gray-200 rounded-full h-4 mt-1">
+                          <div
+                            className="bg-blue-600 h-4 rounded-full"
+                            style={{ width: `${(displayEvidence.decision.confidence || 0) * 100}%` }}
+                          />
+                        </div>
+                        <span className="text-sm text-gray-600">
+                          {((displayEvidence.decision.confidence || 0) * 100).toFixed(0)}%
+                        </span>
+                      </div>
+                    )}
+                    {displayEvidence.decision?.basis && (
+                      <div>
+                        <InfoTooltip {...FIELD_EXPLANATIONS.basis} />
+                        <br />
+                        <p className="text-gray-700">{displayEvidence.decision.basis}</p>
+                      </div>
+                    )}
+                    {displayEvidence.decision?.estimated_exposure && (
+                      <div className="grid grid-cols-2 gap-4 mt-4 p-3 bg-gray-50 rounded">
+                        <div>
+                          <InfoTooltip {...FIELD_EXPLANATIONS.estimated_exposure} />
+                          <br />
+                          <span className="text-lg font-semibold text-red-600">
+                            ${displayEvidence.decision.estimated_exposure.toLocaleString()}
+                          </span>
+                        </div>
+                        {displayEvidence.decision?.potential_savings && (
+                          <div>
+                            <span className="font-medium inline-flex items-center gap-1.5">
+                              Potential Savings
+                            </span>
+                            <br />
+                            <span className="text-lg font-semibold text-green-600">
+                              ${displayEvidence.decision.potential_savings.toLocaleString()}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+              {/* Supporting Evidence */}
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="mb-4">
+                  <InfoTooltip {...FIELD_EXPLANATIONS.supporting_evidence} />
+                </div>
+                <div className="space-y-4">
+                  {displayEvidence.supporting_evidence?.map((evidence: any, index: number) => (
+                    <div key={index} className="border-l-4 border-blue-600 pl-4 py-2">
+                      <div className="font-medium">{evidence.source || `Evidence ${index + 1}`}</div>
+                      <div className="text-sm text-gray-600">{evidence.evidence_type}</div>
+                      <p className="text-gray-700 mt-1">{evidence.summary}</p>
+                      {evidence.weight && (
+                        <div className="text-sm text-gray-500 mt-1">
+                          <InfoTooltip {...FIELD_EXPLANATIONS.weight} />:{' '}
+                          <span className="font-semibold">{(evidence.weight * 100).toFixed(0)}%</span>
+                        </div>
+                      )}
+                      {evidence.risk_score && (
+                        <div className="text-sm text-gray-500 mt-1">
+                          <InfoTooltip {...FIELD_EXPLANATIONS.fraud_score} />:{' '}
+                          <span className="font-semibold">{(evidence.risk_score * 100).toFixed(0)}%</span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Human Interventions */}
+              {displayEvidence.human_interventions && displayEvidence.human_interventions.length > 0 && (
+                <div className="bg-white rounded-lg shadow p-6">
+                  <div className="mb-4">
+                    <InfoTooltip {...FIELD_EXPLANATIONS.human_interventions} />
+                  </div>
+                  <div className="space-y-4">
+                    {displayEvidence.human_interventions.map((intervention: any, index: number) => (
+                      <div key={index} className="border-l-4 border-green-600 pl-4 py-3 bg-green-50">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="font-medium text-gray-900">{intervention.intervention_type}</div>
+                          <div className="text-sm text-gray-500">
+                            {intervention.timestamp ? format(new Date(intervention.timestamp), 'PPpp') : ''}
+                          </div>
+                        </div>
+                        <div className="text-sm text-gray-700">
+                          <span className="font-medium">Reviewer:</span> {intervention.reviewer}
+                        </div>
+                        {intervention.checkpoint && (
+                          <div className="text-sm text-gray-700">
+                            <span className="font-medium">Checkpoint:</span> {intervention.checkpoint}
+                          </div>
+                        )}
+                        <div className="text-sm text-gray-700">
+                          <span className="font-medium">Action:</span>{' '}
+                          <span className="px-2 py-0.5 bg-green-100 text-green-800 rounded">
+                            {intervention.action}
+                          </span>
+                        </div>
+                        {intervention.comments && (
+                          <p className="text-gray-700 mt-2 italic">&quot;{intervention.comments}&quot;</p>
+                        )}
+                        {intervention.decision_impact && (
+                          <div className="text-sm text-gray-600 mt-2">
+                            <span className="font-medium">Impact:</span> {intervention.decision_impact}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Agent Chain */}
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="mb-4">
+                  <InfoTooltip {...FIELD_EXPLANATIONS.agent_chain} />
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {displayEvidence.agent_chain?.map((agent: string, index: number) => (
+                    <div key={index} className="flex items-center">
+                      <div className="px-4 py-2 bg-blue-100 text-blue-800 rounded font-medium">
+                        {agent}
+                      </div>
+                      {index < (displayEvidence.agent_chain?.length || 0) - 1 && (
+                        <span className="mx-2 text-gray-400">→</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Assumptions & Limitations */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Assumptions */}
+                <div className="bg-white rounded-lg shadow p-6">
+                  <div className="mb-4">
+                    <InfoTooltip {...FIELD_EXPLANATIONS.assumptions} />
+                  </div>
+                  <ul className="list-disc list-inside space-y-2 text-gray-700">
+                    {displayEvidence.assumptions?.map((assumption: string, index: number) => (
+                      <li key={index}>{assumption}</li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Limitations */}
+                <div className="bg-white rounded-lg shadow p-6">
+                  <div className="mb-4">
+                    <InfoTooltip {...FIELD_EXPLANATIONS.limitations} />
+                  </div>
+                  <ul className="list-disc list-inside space-y-2 text-gray-700">
+                    {displayEvidence.limitations?.map((limitation: string, index: number) => (
+                      <li key={index}>{limitation}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+              </>
+            )}
+          </div>
+        );
+      })()}
     </div>
   );
 }

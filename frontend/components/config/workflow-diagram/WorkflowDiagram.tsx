@@ -18,7 +18,7 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 
 import { apiClient } from '@/lib/api-client';
-import { buildGraph, filterEdges } from '@/lib/diagram/graph-builder';
+import { buildGraph, filterEdges, filterNodes } from '@/lib/diagram/graph-builder';
 import { applyLayout, recenterGraph } from '@/lib/diagram/layout-engine';
 import { DiagramNode, DiagramEdge, DiagramFilters } from './types';
 
@@ -26,6 +26,7 @@ import { DiagramNode, DiagramEdge, DiagramFilters } from './types';
 import OrchestratorNode from './nodes/OrchestratorNode';
 import AgentNode from './nodes/AgentNode';
 import ToolNode from './nodes/ToolNode';
+import HumanTouchpointNode from './nodes/HumanTouchpointNode';
 
 // Custom edge components
 import WorkflowEdge from './edges/WorkflowEdge';
@@ -46,6 +47,7 @@ const nodeTypes: NodeTypes = {
   orchestrator: OrchestratorNode,
   agent: AgentNode,
   tool: ToolNode,
+  humanTouchpoint: HumanTouchpointNode,
 };
 
 // Define custom edge types
@@ -74,6 +76,7 @@ export default function WorkflowDiagram({ workflowId }: WorkflowDiagramProps) {
     showDependencies: true,
     showToolEdges: true,
     showGovernance: false,
+    showHumanTouchpoints: true,
   });
 
   // Load diagram data
@@ -92,7 +95,7 @@ export default function WorkflowDiagram({ workflowId }: WorkflowDiagramProps) {
         ]);
 
         // Build graph from registries
-        const graph = buildGraph(workflow, agents, tools, governance);
+        const graph = buildGraph(workflow, agents, tools, governance, filters);
 
         // Apply layout algorithm
         const layouted = applyLayout(graph.nodes, graph.edges);
@@ -111,7 +114,12 @@ export default function WorkflowDiagram({ workflowId }: WorkflowDiagramProps) {
     }
 
     loadDiagram();
-  }, [workflowId]);
+  }, [workflowId, filters]);
+
+  // Filter nodes based on user preferences
+  const filteredNodes = useMemo(() => {
+    return filterNodes(nodes, filters);
+  }, [nodes, filters]);
 
   // Filter edges based on user preferences
   const filteredEdges = useMemo(() => {
@@ -153,7 +161,7 @@ export default function WorkflowDiagram({ workflowId }: WorkflowDiagramProps) {
   return (
     <div className="h-[800px] w-full border rounded-lg bg-gray-50 relative">
       <ReactFlow
-        nodes={nodes}
+        nodes={filteredNodes}
         edges={filteredEdges}
         onNodeClick={onNodeClick}
         onPaneClick={onPaneClick}
@@ -172,6 +180,7 @@ export default function WorkflowDiagram({ workflowId }: WorkflowDiagramProps) {
             const n = node as DiagramNode;
             if (n.type === 'orchestrator') return '#3b82f6';
             if (n.type === 'agent') return '#10b981';
+            if (n.type === 'humanTouchpoint') return '#f59e0b';
             return '#6b7280';
           }}
           maskColor="rgba(0, 0, 0, 0.1)"

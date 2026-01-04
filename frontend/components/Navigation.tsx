@@ -9,10 +9,9 @@ export default function Navigation() {
   const navItems = [
     { href: '/', label: 'Home' },
     { href: '/run-claim', label: 'Run Claim' },
-    { href: '/replay', label: 'Replay' },
+    { href: '/replay', label: 'Observability' },
     { href: '/memory', label: 'Memory' },
     { href: '/artifacts', label: 'Artifacts' },
-    { href: '/evidence', label: 'Evidence' },
     { href: '/hitl', label: 'Interventions' },
     { href: '/config', label: 'Configuration' },
   ];
