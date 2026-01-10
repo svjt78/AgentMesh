@@ -52,6 +52,30 @@ services:
       retries: 3
       start_period: 40s
 
+  integration_fabric:
+    build:
+      context: ./backend/integration_fabric
+      dockerfile: Dockerfile
+    container_name: integration_fabric
+    ports:
+      - "${INTEGRATION_FABRIC_PORT:-8020}:8020"
+    environment:
+      - STORAGE_PATH=/storage
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./backend/integration_fabric/app:/app/app:rw
+      - ./registries:/registries:rw
+      - ./storage:/storage:rw
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8020 --reload
+    networks:
+      - agentmesh
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8020/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
   frontend:
     build:
       context: ./frontend
@@ -62,6 +86,7 @@ services:
       - "${FRONTEND_PORT:-3016}:3000"
     environment:
       - NEXT_PUBLIC_ORCHESTRATOR_URL=http://localhost:${ORCHESTRATOR_PORT:-8016}
+      - NEXT_PUBLIC_INTEGRATION_FABRIC_URL=http://localhost:${INTEGRATION_FABRIC_PORT:-8020}
       - NODE_ENV=development
     volumes:
       # Volume mounts for hot reload

@@ -9,6 +9,7 @@ export default function Navigation() {
   const navItems = [
     { href: '/', label: 'Home' },
     { href: '/run-claim', label: 'Run Claim' },
+    { href: '/integrations', label: 'Integrations' },
     { href: '/replay', label: 'Observability' },
     { href: '/memory', label: 'Memory' },
     { href: '/artifacts', label: 'Artifacts' },

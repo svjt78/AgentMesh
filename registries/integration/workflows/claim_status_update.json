@@ -1,0 +1,36 @@
+{
+  "workflow_id": "claim_status_update",
+  "name": "Claim Status Update",
+  "description": "Update claim status with idempotency and retry-safe automation.",
+  "version": "1.0",
+  "trigger": "ClaimStatusChanged",
+  "priority": "standard",
+  "sla": {
+    "max_latency_ms": 2000,
+    "timeout_ms": 6000,
+    "fast_fail_threshold": 2
+  },
+  "throughput": {
+    "max_concurrency": 4,
+    "queue_depth_limit": 120
+  },
+  "steps": [
+    {
+      "id": "update_claim",
+      "type": "rest_call",
+      "connector": "guidewire_claims",
+      "operation": "PATCH /claims/{claim_id}",
+      "idempotency": true,
+      "retry_policy": "standard",
+      "failure_policy": "dead_letter"
+    },
+    {
+      "id": "audit",
+      "type": "audit_event"
+    }
+  ],
+  "metadata": {
+    "domains": ["claims"],
+    "ecosystems": ["guidewire"]
+  }
+}

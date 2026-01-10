@@ -94,13 +94,20 @@ Thumbs.db
 storage/sessions/*.jsonl
 storage/artifacts/*.json
 storage/checkpoints/*.json
+storage/checkpoints/index/*.jsonl
 storage/compactions/*
+storage/integration/runs/*
+storage/integration/dlq/*
+storage/integration/idempotency.json
 
 # Keep directory structure
 !storage/sessions/.gitkeep
 !storage/artifacts/.gitkeep
 !storage/checkpoints/.gitkeep
 !storage/compactions/.gitkeep
+!storage/integration/.gitkeep
+!storage/integration/runs/.gitkeep
+!storage/integration/dlq/.gitkeep
 
 # Logs
 *.log

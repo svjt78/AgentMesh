@@ -1,0 +1,41 @@
+{
+  "workflow_id": "claim_fnol_sync",
+  "name": "Claim FNOL Sync",
+  "description": "Fetch FNOL details from Guidewire, mask PII, and audit the run.",
+  "version": "1.0",
+  "trigger": "ClaimOpened",
+  "priority": "critical",
+  "sla": {
+    "max_latency_ms": 1500,
+    "timeout_ms": 5000,
+    "fast_fail_threshold": 2
+  },
+  "throughput": {
+    "max_concurrency": 5,
+    "queue_depth_limit": 100
+  },
+  "steps": [
+    {
+      "id": "fetch_claim",
+      "type": "rest_call",
+      "connector": "guidewire_claims",
+      "operation": "GET /claims/{claim_id}",
+      "idempotency": true,
+      "retry_policy": "standard",
+      "failure_policy": "dead_letter"
+    },
+    {
+      "id": "mask_pii",
+      "type": "security_transform",
+      "policy": "claims_pii_masking"
+    },
+    {
+      "id": "audit",
+      "type": "audit_event"
+    }
+  ],
+  "metadata": {
+    "domains": ["claims"],
+    "ecosystems": ["guidewire"]
+  }
+}

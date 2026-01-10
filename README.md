@@ -17,6 +17,7 @@
 - [Key Features](#key-features)
 - [Architecture](#architecture)
 - [Quick Start](#quick-start)
+- [AIF Quick Start](#aif-quick-start)
 - [Project Structure](#project-structure)
 - [Configuration](#configuration)
 - [Using the System](#using-the-system)
@@ -108,6 +109,25 @@ AgentMesh is a **production-ready multi-agent orchestration platform** specifica
 - Session management with listing, filtering, and deletion
 - Responsive design with Tailwind CSS
 
+### ✅ **Integration Fabric (AIF)**
+- **Standalone FastAPI service** (port 8020) for enterprise integration with insurer core systems
+- **4 Production Connectors**: Guidewire Claims, Duck Creek Policy, Socotra Billing, Mainframe Legacy Adapter
+- **4 Demo Workflows**: FNOL Sync, Claim Status Update, Billing Sync, Integration Failure Drill
+- **Idempotency by Design**: File-backed deduplication prevents duplicate external API calls
+- **Dead Letter Queue (DLQ)**: Failed operations automatically queued for investigation and replay
+- **Security Policies**: PII/PCI masking rules (configuration-only in demo)
+- **Retry & Circuit Breaker**: Configurable retry policies and circuit breaker settings per connector
+- **SSE Event Streaming**: Real-time run progress via `/runs/{run_id}/stream`
+- **Complete Audit Trail**: Every integration step logged to `storage/integration/runs/`
+- **Integrations UI**: Complete management interface at `/integrations`
+- **Configuration UI**: Integration Scalability tab (10th tab in Configuration page)
+
+**📚 Complete Documentation:**
+- **Quick Start**: [AIF.md](AIF.md) - Service overview and workflow execution
+- **API Reference**: [API_REFERENCE.md](API_REFERENCE.md#integration-fabric-api) - Complete endpoint documentation
+- **Scalability Config**: [INTEGRATION_SCALABILITY.md](INTEGRATION_SCALABILITY.md) - UI configuration guide
+- **Architecture**: [agent_mesh_integration_fabric_detailed_specifications.md](agent_mesh_integration_fabric_detailed_specifications.md) - Complete specifications
+
 ---
 
 ## Architecture
@@ -179,7 +199,7 @@ AgentMesh is a **production-ready multi-agent orchestration platform** specifica
 - **System Requirements**:
   - 8GB RAM minimum (16GB recommended)
   - 10GB free disk space
-  - Ports available: 3016 (frontend), 8016 (orchestrator), 8010 (tools)
+  - Ports available: 3016 (frontend), 8016 (orchestrator), 8010 (tools), 8020 (integration fabric)
 
 ### Installation
 
@@ -223,6 +243,7 @@ docker compose up -d
 # Check service health
 curl http://localhost:8016/health
 curl http://localhost:8010/health
+curl http://localhost:8020/health
 
 # View logs
 docker compose logs -f orchestrator
@@ -245,8 +266,29 @@ docker compose logs -f orchestrator
   - Governance Policies, System Config tabs
   - Accountability (HITL) tab
   - **Context Engineering tab** - Configure context strategies and processor pipeline
+- **Integrations (AIF)**: http://localhost:3016/integrations
 - **API Documentation**: http://localhost:8016/docs
+- **AIF API Documentation**: http://localhost:8020/docs
 - **API Health**: http://localhost:8016/health
+
+### AIF Quick Start
+
+- **Docs**: `AIF.md`
+- **UI**: Open http://localhost:3016/integrations and run the FNOL sync or failure drill workflows
+- **API**:
+
+```bash
+POST http://localhost:8020/runs
+Content-Type: application/json
+
+{
+  "workflow_id": "claim_fnol_sync",
+  "input_data": {
+    "claim_id": "CLM-2024-0012",
+    "policy_id": "POL-9087"
+  }
+}
+```
 
 ### Run Your First Workflow
 
@@ -362,6 +404,27 @@ AgentMesh/
 │       │       └── workflow_executor.py       # Background execution
 │       ├── Dockerfile
 │       └── requirements.txt
+│   └── integration_fabric/     # Integration Fabric API
+│       ├── app/
+│       │   ├── api/            # API endpoints
+│       │   │   ├── runs.py     # Workflow execution and SSE streaming
+│       │   │   ├── dlq.py      # Dead letter queue management
+│       │   │   └── registries.py  # Registry access endpoints
+│       │   ├── models/
+│       │   │   └── schemas.py  # Pydantic models for workflows
+│       │   ├── services/       # Core services
+│       │   │   ├── workflow_runner.py      # Integration orchestration
+│       │   │   ├── connector_executor.py   # REST connector simulation
+│       │   │   ├── idempotency_store.py    # Deduplication cache
+│       │   │   ├── dlq_store.py            # Failed operation queue
+│       │   │   ├── run_store.py            # Execution state storage
+│       │   │   ├── security_engine.py      # PII/PCI policy engine (stub)
+│       │   │   ├── registry_manager.py     # Integration registry loader
+│       │   │   └── sse_broadcaster.py      # Real-time event streaming
+│       │   ├── config.py       # Configuration management
+│       │   └── main.py         # FastAPI application
+│       ├── Dockerfile
+│       └── requirements.txt
 │
 ├── tools/
 │   └── tools_gateway/          # Mock tools service
@@ -381,14 +444,17 @@ AgentMesh/
 │   │   ├── memory/             # Memory browser page
 │   │   ├── artifacts/          # Artifact versions page
 │   │   ├── hitl/               # Human-in-the-Loop dashboard
+│   │   ├── integrations/       # Integration Fabric UI
+│   │   │   └── page.tsx        # Workflow runs, connectors, DLQ, policies
 │   │   ├── config/             # Configuration management UI
-│   │   │   └── page.tsx        # Multi-tab config (Agents, Tools, Context Engineering, etc.)
+│   │   │   └── page.tsx        # Multi-tab config (10 tabs)
 │   │   └── layout.tsx
 │   ├── components/
 │   │   ├── Navigation.tsx      # Navigation component (updated labels)
 │   │   ├── InfoTooltip.tsx     # Contextual help tooltips (NEW)
 │   │   ├── config/             # Config UI components
-│   │   │   ├── ContextEngineeringTab.tsx  # Context strategies config (NEW)
+│   │   │   ├── ContextEngineeringTab.tsx       # Context strategies config (NEW)
+│   │   │   ├── IntegrationScalabilityTab.tsx   # Integration scalability config (NEW)
 │   │   │   └── workflow-diagram/
 │   │   │       ├── WorkflowDiagram.tsx    # Workflow visualization
 │   │   │       ├── NodeDetailsPanel.tsx   # Node details view
@@ -416,14 +482,32 @@ AgentMesh/
 │   ├── model_profiles.json     # LLM configurations
 │   ├── governance_policies.json # Access control policies
 │   ├── system_config.json      # System-wide configuration
-│   └── workflows/
-│       └── claims_triage.json  # Workflow definition with HITL checkpoints
+│   ├── workflows/
+│   │   └── claims_triage.json  # Workflow definition with HITL checkpoints
+│   └── integration/            # Integration Fabric registries
+│       ├── connectors.json     # REST connectors (Guidewire, Duck Creek, Socotra, Mainframe)
+│       ├── auth_profiles.json  # Auth strategies (OAuth, Token, API Key, Service Account)
+│       ├── security_policies.json  # PII/PCI masking rules
+│       ├── system_config.json  # Retry policies, timeout settings
+│       └── workflows/          # Integration workflow definitions
+│           ├── claim_fnol_sync.json
+│           ├── claim_status_update.json
+│           ├── billing_sync.json
+│           └── integration_failure_drill.json
 │
 ├── storage/                    # Persistent storage
 │   ├── sessions/               # JSONL event streams
 │   ├── artifacts/              # Evidence maps
 │   ├── checkpoints/            # HITL checkpoint data
-│   └── compactions/            # Compacted session data
+│   ├── compactions/            # Compacted session data
+│   └── integration/            # Integration Fabric storage
+│       ├── runs/               # Integration run executions
+│       │   ├── {run_id}.json       # Run metadata and state
+│       │   └── {run_id}_events.jsonl  # Step-by-step event log
+│       ├── idempotency/        # Deduplication cache
+│       │   └── {idempotency_key}.json  # Cached operation results (24h TTL)
+│       └── dlq/                # Dead letter queue
+│           └── items.jsonl     # Failed operations (append-only)
 │
 ├── sample_data/                # Sample claims for testing
 │   ├── sample_claim_clean.json
@@ -434,10 +518,15 @@ AgentMesh/
 ├── docker-compose.yml          # Service orchestration
 ├── .env                        # Environment configuration
 ├── README.md                   # This file
+├── API_REFERENCE.md            # Complete API documentation (NEW)
+├── AIF.md                      # Integration Fabric quick reference (NEW)
+├── INTEGRATION_SCALABILITY.md  # Integration Scalability UI guide (NEW)
+├── INTEGRATION_SCALABILITY_CONFIG.md  # Registry schema reference (NEW)
+├── agent_mesh_integration_fabric_detailed_specifications.md  # Complete AIF specs (NEW)
 ├── CLAUDE.md                   # Claude Code development guidelines
 ├── DECISIONS.md                # Architectural decisions
 ├── IMPLEMENTATION_PROGRESS.md  # Development progress
-├── EXPLAINABILITY_TAB_DOCUMENTATION.md  # Explainability interface guide (NEW)
+├── EXPLAINABILITY_TAB_DOCUMENTATION.md  # Explainability interface guide
 ├── HUMAN_IN_THE_LOOP.md        # HITL feature documentation
 ├── CONFIGURATION.md            # Configuration management guide
 ├── AGENTS.md                   # Agent design documentation
@@ -630,6 +719,29 @@ Content-Type: application/json
 ```
 
 Response includes `stream_url` for SSE monitoring.
+
+### Integration Fabric (AIF)
+
+#### Via Frontend
+
+1. **Navigate**: http://localhost:3016/integrations
+2. **Select Workflow**: Choose FNOL sync, status update, or failure drill
+3. **Run Workflow**: Trigger run and inspect traces, DLQ, and policies
+
+#### Via API
+
+```bash
+POST http://localhost:8020/runs
+Content-Type: application/json
+
+{
+  "workflow_id": "claim_fnol_sync",
+  "input_data": {
+    "claim_id": "CLM-2024-0012",
+    "policy_id": "POL-9087"
+  }
+}
+```
 
 ### Monitoring Execution
 
@@ -854,15 +966,27 @@ The platform includes a web-based configuration management UI.
 http://localhost:3016/config
 ```
 
+**Configuration Tabs** (10 tabs total):
+
+1. **Orchestrator** - Meta-agent settings, iteration limits, timeout configuration
+2. **Agents** - Worker agent definitions, capabilities, allowed tools, output schemas
+3. **Tools** - Tool catalog with endpoints, descriptions, input/output schemas
+4. **Model Profiles** - LLM provider settings (OpenAI, Anthropic), temperature, token limits
+5. **Workflows** - Workflow definitions, suggested sequences, completion criteria
+6. **Accountability (HITL)** - Human-in-the-loop checkpoint configuration
+7. **Governance** - Access control policies, agent/tool permissions, execution constraints
+8. **Controllability (System)** - System-wide limits, safety thresholds, circuit breakers
+9. **Context Engineering** - Token budgets, compaction settings, memory layer, artifact management
+10. **Integration Scalability** - Throughput limits (concurrency, QPS, burst), retry profiles, circuit breaker settings, tenant limits
+
 **Features**:
-- View and edit registry files (agents, tools, models, workflows)
+- View and edit all registry files
 - Validate JSON syntax and schema compliance
 - Live preview of configuration changes
 - Export/import configurations
 - Syntax highlighting and error detection
-- Accountability tab for HITL checkpoint configuration
 
-**Note**: Configuration changes require service restart to take effect.
+**Note**: Configuration changes require service restart to take effect. Integration Scalability settings are UI-only (local state) and not yet persisted to backend.
 
 ---
 
@@ -1466,12 +1590,26 @@ npm run dev
 
 ## API Documentation
 
+### 📚 Complete API Reference
+
+**For complete API documentation, see [API_REFERENCE.md](API_REFERENCE.md)**
+
+The API Reference includes:
+- All Orchestrator API endpoints (workflow execution, sessions, checkpoints, context engineering)
+- All Integration Fabric API endpoints (integration runs, DLQ, registries)
+- Request/response examples
+- Error handling
+- Authentication (for production)
+- Rate limiting guidelines
+
 ### Interactive API Docs
 
 FastAPI provides auto-generated interactive API documentation:
 
-- **Swagger UI**: http://localhost:8016/docs
-- **ReDoc**: http://localhost:8016/redoc
+- **Orchestrator Swagger UI**: http://localhost:8016/docs
+- **Orchestrator ReDoc**: http://localhost:8016/redoc
+- **Integration Fabric Swagger UI**: http://localhost:8020/docs
+- **Integration Fabric ReDoc**: http://localhost:8020/redoc
 
 ### Core Endpoints
 
@@ -2149,11 +2287,21 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 Comprehensive documentation is available in the project:
 
+**Core Documentation:**
 - **[README.md](README.md)** (this file) - Complete user guide and quick start
+- **[API_REFERENCE.md](API_REFERENCE.md)** - Complete API endpoint documentation (NEW)
 - **[CLAUDE.md](CLAUDE.md)** - Development guidelines for Claude Code
 - **[DECISIONS.md](DECISIONS.md)** - Architectural decisions and rationale
 - **[IMPLEMENTATION_PROGRESS.md](IMPLEMENTATION_PROGRESS.md)** - Detailed implementation status
-- **[EXPLAINABILITY_TAB_DOCUMENTATION.md](EXPLAINABILITY_TAB_DOCUMENTATION.md)** - Explainability interface user guide (NEW)
+
+**Integration Fabric Documentation:**
+- **[AIF.md](AIF.md)** - Integration Fabric quick reference (NEW)
+- **[INTEGRATION_SCALABILITY.md](INTEGRATION_SCALABILITY.md)** - Integration Scalability UI guide (NEW)
+- **[INTEGRATION_SCALABILITY_CONFIG.md](INTEGRATION_SCALABILITY_CONFIG.md)** - Registry schema reference (NEW)
+- **[agent_mesh_integration_fabric_detailed_specifications.md](agent_mesh_integration_fabric_detailed_specifications.md)** - Complete AIF specifications (NEW)
+
+**Feature-Specific Guides:**
+- **[EXPLAINABILITY_TAB_DOCUMENTATION.md](EXPLAINABILITY_TAB_DOCUMENTATION.md)** - Explainability interface user guide
 - **[HUMAN_IN_THE_LOOP.md](HUMAN_IN_THE_LOOP.md)** - HITL feature design and usage
 - **[CONFIGURATION.md](CONFIGURATION.md)** - Configuration management guide
 - **[AGENTS.md](AGENTS.md)** - Agent design patterns and best practices
@@ -2163,7 +2311,10 @@ Comprehensive documentation is available in the project:
 
 ### Getting Help
 
-- **API Documentation**: http://localhost:8016/docs (when running)
+- **API Documentation**:
+  - Orchestrator API: http://localhost:8016/docs (when running)
+  - Integration Fabric API: http://localhost:8020/docs (when running)
+  - Complete Reference: [API_REFERENCE.md](API_REFERENCE.md)
 - **Issues**: Report bugs via GitHub Issues
 - **Discussions**: Join the community discussions
 - **Email**: contact@agentmesh.io

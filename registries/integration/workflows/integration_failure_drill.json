@@ -1,0 +1,37 @@
+{
+  "workflow_id": "integration_failure_drill",
+  "name": "Integration Failure Drill",
+  "description": "Simulate a connector failure and route to DLQ for reprocessing.",
+  "version": "1.0",
+  "trigger": "FailureInjection",
+  "priority": "bulk",
+  "sla": {
+    "max_latency_ms": 4000,
+    "timeout_ms": 10000,
+    "fast_fail_threshold": 1
+  },
+  "throughput": {
+    "max_concurrency": 2,
+    "queue_depth_limit": 40
+  },
+  "steps": [
+    {
+      "id": "sync_policy",
+      "type": "rest_call",
+      "connector": "duckcreek_policy",
+      "operation": "POST /policies",
+      "idempotency": true,
+      "retry_policy": "aggressive",
+      "failure_policy": "dead_letter"
+    },
+    {
+      "id": "simulate_failure",
+      "type": "failure_simulation",
+      "failure_policy": "dead_letter"
+    }
+  ],
+  "metadata": {
+    "domains": ["policy"],
+    "ecosystems": ["duckcreek"]
+  }
+}

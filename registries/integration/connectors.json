@@ -1,0 +1,112 @@
+{
+  "connectors": [
+    {
+      "connector_id": "guidewire_claims",
+      "name": "Guidewire Claims API",
+      "description": "Simulated Guidewire Claims REST connector",
+      "type": "REST",
+      "base_url": "${GW_BASE_URL}",
+      "auth_profile": "gw_oauth",
+      "timeout_ms": 5000,
+      "supports_idempotency": true,
+      "simulator_profile": "guidewire_claims_sim",
+      "tags": ["claims", "guidewire"],
+      "scaling": {
+        "max_concurrency": 10,
+        "qps_limit": 25,
+        "burst_limit": 50
+      },
+      "retry_policy_id": "standard",
+      "circuit_breaker": {
+        "failure_threshold": 5,
+        "open_duration_ms": 30000,
+        "half_open_attempts": 2
+      },
+      "region_affinity": {
+        "primary": "us-west-2",
+        "fallbacks": ["us-east-1"]
+      }
+    },
+    {
+      "connector_id": "duckcreek_policy",
+      "name": "Duck Creek Policy API",
+      "description": "Simulated Duck Creek policy admin connector",
+      "type": "REST",
+      "base_url": "${DC_BASE_URL}",
+      "auth_profile": "duckcreek_token",
+      "timeout_ms": 5000,
+      "supports_idempotency": true,
+      "simulator_profile": "duckcreek_policy_sim",
+      "tags": ["policy", "duckcreek"],
+      "scaling": {
+        "max_concurrency": 8,
+        "qps_limit": 20,
+        "burst_limit": 40
+      },
+      "retry_policy_id": "standard",
+      "circuit_breaker": {
+        "failure_threshold": 4,
+        "open_duration_ms": 20000,
+        "half_open_attempts": 2
+      },
+      "region_affinity": {
+        "primary": "us-east-1",
+        "fallbacks": ["us-west-2"]
+      }
+    },
+    {
+      "connector_id": "socotra_billing",
+      "name": "Socotra Billing API",
+      "description": "Simulated Socotra billing connector",
+      "type": "REST",
+      "base_url": "${SOCOTRA_BASE_URL}",
+      "auth_profile": "socotra_api_key",
+      "timeout_ms": 5000,
+      "supports_idempotency": true,
+      "simulator_profile": "socotra_billing_sim",
+      "tags": ["billing", "socotra"],
+      "scaling": {
+        "max_concurrency": 6,
+        "qps_limit": 15,
+        "burst_limit": 30
+      },
+      "retry_policy_id": "standard",
+      "circuit_breaker": {
+        "failure_threshold": 3,
+        "open_duration_ms": 15000,
+        "half_open_attempts": 1
+      },
+      "region_affinity": {
+        "primary": "us-central-1",
+        "fallbacks": ["us-east-1"]
+      }
+    },
+    {
+      "connector_id": "mainframe_legacy",
+      "name": "Legacy Mainframe Adapter",
+      "description": "Simulated mainframe integration adapter",
+      "type": "REST",
+      "base_url": "${MAINFRAME_BASE_URL}",
+      "auth_profile": "mainframe_service_account",
+      "timeout_ms": 8000,
+      "supports_idempotency": false,
+      "simulator_profile": "mainframe_legacy_sim",
+      "tags": ["legacy", "mainframe"],
+      "scaling": {
+        "max_concurrency": 4,
+        "qps_limit": 8,
+        "burst_limit": 16
+      },
+      "retry_policy_id": "aggressive",
+      "circuit_breaker": {
+        "failure_threshold": 2,
+        "open_duration_ms": 45000,
+        "half_open_attempts": 1
+      },
+      "region_affinity": {
+        "primary": "us-east-1",
+        "fallbacks": []
+      }
+    }
+  ]
+}

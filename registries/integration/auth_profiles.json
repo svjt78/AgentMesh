@@ -1,0 +1,52 @@
+{
+  "profiles": [
+    {
+      "profile_id": "gw_oauth",
+      "name": "Guidewire OAuth",
+      "type": "oauth",
+      "config": {
+        "provider": "Mock OIDC",
+        "client_id": "guidewire-demo-client",
+        "scopes": ["claims.read", "claims.write"]
+      },
+      "tenant_limits": [
+        {
+          "tenant_id": "enterprise-001",
+          "qps_limit": 20,
+          "burst_limit": 40,
+          "priority_override": "critical"
+        }
+      ]
+    },
+    {
+      "profile_id": "duckcreek_token",
+      "name": "Duck Creek Token",
+      "type": "token",
+      "config": {
+        "token_type": "Bearer",
+        "rotation_policy": "every_24h"
+      },
+      "tenant_limits": []
+    },
+    {
+      "profile_id": "socotra_api_key",
+      "name": "Socotra API Key",
+      "type": "api_key",
+      "config": {
+        "header_name": "X-API-Key",
+        "rotation_policy": "every_12h"
+      },
+      "tenant_limits": []
+    },
+    {
+      "profile_id": "mainframe_service_account",
+      "name": "Mainframe Service Account",
+      "type": "service_account",
+      "config": {
+        "mechanism": "vaulted_secret",
+        "rotation_policy": "every_90d"
+      },
+      "tenant_limits": []
+    }
+  ]
+}

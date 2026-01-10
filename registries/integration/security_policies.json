@@ -1,0 +1,24 @@
+{
+  "policies": [
+    {
+      "policy_id": "claims_pii_masking",
+      "name": "Claims PII Masking",
+      "description": "Mask common PII fields in claim payloads",
+      "rules": [
+        {"field": "ssn", "action": "mask"},
+        {"field": "dob", "action": "redact"},
+        {"field": "medical_notes", "action": "drop"}
+      ]
+    },
+    {
+      "policy_id": "billing_pci_guard",
+      "name": "Billing PCI Guard",
+      "description": "Redact payment details and tokenize card numbers",
+      "rules": [
+        {"field": "card_number", "action": "tokenize"},
+        {"field": "cvv", "action": "drop"},
+        {"field": "bank_account", "action": "mask"}
+      ]
+    }
+  ]
+}

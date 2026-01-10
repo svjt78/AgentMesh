@@ -191,80 +191,7 @@
     "business_owner": "Claims Operations",
     "expected_duration_seconds": 240
   },
-  "human_touchpoints": [
-    {
-      "touchpoint_id": "post_intake_review",
-      "name": "High-Value Claim Review",
-      "description": "Manual approval required for claims exceeding $50,000 before processing",
-      "position": {
-        "after_step": "intake",
-        "before_step": "coverage"
-      },
-      "trigger_condition": "claim_amount > 50000",
-      "approver_role": "Senior Claims Manager"
-    },
-    {
-      "touchpoint_id": "fraud_verification",
-      "name": "Fraud Investigation Review",
-      "description": "Human verification required when fraud confidence score exceeds 70%",
-      "position": {
-        "after_step": "fraud",
-        "before_step": "severity"
-      },
-      "trigger_condition": "fraud_score > 0.7",
-      "approver_role": "Fraud Investigator"
-    }
-  ],
   "hitl_checkpoints": [
-    {
-      "checkpoint_id": "fraud_review",
-      "checkpoint_type": "decision",
-      "trigger_point": "after_agent",
-      "agent_id": "fraud_agent",
-      "checkpoint_name": "High Fraud Score Review",
-      "description": "Review fraud detection results when fraud score is high",
-      "required_role": "fraud_investigator",
-      "trigger_condition": {
-        "type": "output_based",
-        "condition": "fraud_score > 0.7"
-      },
-      "timeout_config": {
-        "enabled": true,
-        "timeout_seconds": 3600,
-        "on_timeout": "auto_approve"
-      },
-      "notification_config": {
-        "enabled": true,
-        "channels": [
-          "dashboard"
-        ],
-        "urgency": "high"
-      },
-      "ui_schema": {
-        "display_fields": [
-          "fraud_score",
-          "fraud_signals",
-          "similar_claims"
-        ],
-        "decision_options": [
-          {
-            "value": "confirm_fraud",
-            "label": "Confirm Fraud - Escalate",
-            "description": "High confidence fraud detected - escalate for investigation"
-          },
-          {
-            "value": "false_positive",
-            "label": "False Positive - Continue",
-            "description": "Legitimate claim - continue normal processing"
-          },
-          {
-            "value": "needs_investigation",
-            "label": "Requires Further Investigation",
-            "description": "Inconclusive - assign to fraud investigator"
-          }
-        ]
-      }
-    },
     {
       "checkpoint_id": "final_approval",
       "checkpoint_type": "approval",
@@ -291,6 +218,63 @@
           "request_revision"
         ]
       }
+    },
+    {
+      "checkpoint_id": "fraud_review_spl",
+      "checkpoint_type": "approval",
+      "trigger_point": "after_agent",
+      "checkpoint_name": "High fraud score review",
+      "description": "High fraud score review",
+      "required_role": "fraud_investigator",
+      "timeout_config": {
+        "enabled": false
+      },
+      "notification_config": {
+        "enabled": true,
+        "channels": [
+          "dashboard"
+        ],
+        "urgency": "normal"
+      },
+      "ui_schema": {
+        "display_evidence_map": true,
+        "display_agent_chain": true,
+        "actions": [
+          "approve",
+          "reject",
+          "request_revision",
+          "escalate"
+        ]
+      },
+      "agent_id": "intake_agent"
+    },
+    {
+      "checkpoint_id": "fraud_review",
+      "checkpoint_type": "approval",
+      "trigger_point": "after_agent",
+      "checkpoint_name": "High Fraud Review Score",
+      "description": "High Fraud Review Score",
+      "required_role": "fraud_investigator",
+      "timeout_config": {
+        "enabled": false
+      },
+      "notification_config": {
+        "enabled": true,
+        "channels": [
+          "dashboard"
+        ],
+        "urgency": "normal"
+      },
+      "ui_schema": {
+        "display_evidence_map": true,
+        "display_agent_chain": true,
+        "actions": [
+          "approve",
+          "reject",
+          "request_revision"
+        ]
+      },
+      "agent_id": "intake_agent"
     }
   ]
 }

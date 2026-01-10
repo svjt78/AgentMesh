@@ -1,0 +1,41 @@
+{
+  "workflow_id": "billing_sync",
+  "name": "Billing Sync",
+  "description": "Sync billing data with PCI masking and audit evidence.",
+  "version": "1.0",
+  "trigger": "InvoiceGenerated",
+  "priority": "standard",
+  "sla": {
+    "max_latency_ms": 2500,
+    "timeout_ms": 7000,
+    "fast_fail_threshold": 2
+  },
+  "throughput": {
+    "max_concurrency": 3,
+    "queue_depth_limit": 80
+  },
+  "steps": [
+    {
+      "id": "sync_billing",
+      "type": "rest_call",
+      "connector": "socotra_billing",
+      "operation": "POST /billing/invoices",
+      "idempotency": true,
+      "retry_policy": "standard",
+      "failure_policy": "dead_letter"
+    },
+    {
+      "id": "pci_guard",
+      "type": "security_transform",
+      "policy": "billing_pci_guard"
+    },
+    {
+      "id": "audit",
+      "type": "audit_event"
+    }
+  ],
+  "metadata": {
+    "domains": ["billing"],
+    "ecosystems": ["socotra"]
+  }
+}

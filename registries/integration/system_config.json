@@ -1,0 +1,62 @@
+{
+  "version": "1.1",
+  "retry_policies": [
+    {
+      "policy_id": "standard",
+      "max_attempts": 3,
+      "backoff_seconds": 0.5
+    },
+    {
+      "policy_id": "aggressive",
+      "max_attempts": 5,
+      "backoff_seconds": 0.25
+    }
+  ],
+  "features": {
+    "sso_oidc_adapter": true,
+    "event_driven_channels": ["pubsub", "mq", "event_bridge"],
+    "audit_evidence_exports": true
+  },
+  "throughput_limits": {
+    "max_concurrency": 50,
+    "qps_limit": 200,
+    "burst_limit": 400,
+    "queue_depth_limit": 1000,
+    "backpressure_mode": "queue"
+  },
+  "circuit_breaker_defaults": {
+    "failure_threshold": 5,
+    "open_duration_ms": 30000,
+    "half_open_attempts": 2
+  },
+  "event_channel_policies": {
+    "mq": {
+      "batch_size": 20,
+      "poll_interval_ms": 500,
+      "max_parallel_consumers": 8
+    },
+    "pubsub": {
+      "batch_size": 50,
+      "poll_interval_ms": 200,
+      "max_parallel_consumers": 16
+    },
+    "event_bridge": {
+      "batch_size": 10,
+      "poll_interval_ms": 1000,
+      "max_parallel_consumers": 4
+    }
+  },
+  "observability": {
+    "metrics_sampling_rate": 0.1,
+    "trace_retention_days": 14,
+    "alert_thresholds": {
+      "error_rate_pct": 2.5,
+      "dlq_depth": 50,
+      "latency_p95_ms": 2000
+    }
+  },
+  "idempotency": {
+    "idempotency_ttl_ms": 86400000,
+    "dedup_scope": "workflow"
+  }
+}

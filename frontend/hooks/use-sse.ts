@@ -16,6 +16,8 @@ export interface UseSSEOptions {
   onError?: (error: Event) => void;
   onComplete?: () => void;
   reconnect?: boolean;
+  eventTypes?: string[];
+  completionEvents?: string[];
 }
 
 export function useSSE(url: string | null, options: UseSSEOptions = {}) {
@@ -41,17 +43,12 @@ export function useSSE(url: string | null, options: UseSSEOptions = {}) {
     const eventSource = new EventSource(streamUrl);
     eventSourceRef.current = eventSource;
 
-    eventSource.onopen = () => {
-      console.log('SSE connection opened');
-      setIsConnected(true);
-      setError(null);
-    };
-
-    eventSource.onmessage = (e) => {
+    const handleEvent = (e: MessageEvent) => {
       try {
         const data = JSON.parse(e.data);
         const event: SSEEvent = {
           id: e.lastEventId,
+          event: e.type,
           data,
           timestamp: new Date().toISOString(),
         };
@@ -68,19 +65,34 @@ export function useSSE(url: string | null, options: UseSSEOptions = {}) {
       }
     };
 
-    // Handle custom event types
-    eventSource.addEventListener('workflow_completed', (e: MessageEvent) => {
-      console.log('Workflow completed');
-      optionsRef.current.onComplete?.();
-      eventSource.close();
-      setIsConnected(false);
-    });
+    eventSource.onopen = () => {
+      console.log('SSE connection opened');
+      setIsConnected(true);
+      setError(null);
+    };
 
-    eventSource.addEventListener('workflow_error', (e: MessageEvent) => {
-      console.error('Workflow error:', e.data);
-      optionsRef.current.onComplete?.();
-      eventSource.close();
-      setIsConnected(false);
+    eventSource.onmessage = (e) => {
+      handleEvent(e);
+    };
+
+    const completionEvents = new Set(
+      optionsRef.current.completionEvents ?? ['workflow_completed', 'workflow_error'],
+    );
+    const eventTypes = new Set([
+      ...(optionsRef.current.eventTypes ?? []),
+      ...completionEvents,
+    ]);
+
+    eventTypes.forEach((eventType) => {
+      eventSource.addEventListener(eventType, (e: MessageEvent) => {
+        handleEvent(e);
+        if (completionEvents.has(eventType)) {
+          console.log(`SSE completion event: ${eventType}`);
+          optionsRef.current.onComplete?.();
+          eventSource.close();
+          setIsConnected(false);
+        }
+      });
     });
 
     eventSource.onerror = (e) => {
